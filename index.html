@@ -180,6 +180,23 @@ p.q { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .cev.cur { background: var(--field); }
 .cev.cur .cb { background: var(--c-ink); }
 .cev .ct { flex: 1; min-width: 0; }
+.cev .tm b { font-weight: 700; color: var(--gold-ink); }
+.cev.cur .tm b { color: var(--ink); }
+/* 素材的方塊圖：一題一塊，面積＝幾位問過 */
+.tmapw { background: var(--card); border-radius: 22px; padding: 8px; margin-top: 10px; }
+.tmap { position: relative; width: 100%; aspect-ratio: 4 / 3; }
+.tile { position: absolute; padding: 2px; }
+.tile > button { width: 100%; height: 100%; border: 0; border-radius: 12px; padding: 10px 12px; text-align: left; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; background: #F4EAD5; color: var(--ink); }
+.tmap.teach .tile > button { background: #E9E9EE; color: var(--ink); }
+.tmap.sell .tile .tn { color: var(--gold-ink); }
+.hint .link { font-size: 15px; padding: 0; }
+.tile .tn { font-size: 30px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.tile .tn small { font-size: 14px; font-weight: 700; margin-left: 3px; }
+.tile .tq { font-size: 15px; font-weight: 700; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tile.sm .tn { font-size: 20px; }
+.tile.sm .tq { font-size: 13px; -webkit-line-clamp: 2; }
+.tile.xs .tq { display: none; }
+.tile.xs > button { padding: 8px; justify-content: center; align-items: center; }
 .cev .tm { display: block; font-size: 14px; color: var(--sub); font-variant-numeric: tabular-nums; line-height: 1.4; }
 .cev .nm { display: block; font-size: 18px; font-weight: 700; line-height: 1.45; }
 .cev .ty { display: block; font-size: 15px; color: var(--ink); line-height: 1.5; }
@@ -865,6 +882,10 @@ const EX_REACH = { '沒介紹方案': 'n07 n20 n30 n37', '介紹了方案': 'ex6
 (function buildDemo() {
   const R = { '成': '成交', '考': '考慮中', '沒': '沒成交', '續': '成交', '未': '' };
   const qmap = new Map(EX.brain.map(b => [b.id, b]));
+  const SHORT = { eb1: '沒經驗轉得過去嗎', eb2: '跟線上課差在哪', eb3: '投很多份沒回音', eb4: '三個月沒找到怎麼辦', eb5: '轉過去薪水會掉嗎', eb6: '作品集放什麼', eb7: '費用可以分期嗎',
+    eb8: '年紀大還來得及嗎', eb9: '一週要花多久', eb10: '期望薪資怎麼回', eb11: '為什麼離職怎麼答', eb12: '舊經驗怎麼寫進履歷', eb13: '拿到 offer 怎麼談薪', eb14: '兩個 offer 怎麼選',
+    eb15: '三個月到了要續嗎', eb16: '先自己投投看', eb17: '客人嫌貴要降價嗎' };
+  for (const b of EX.brain) if (SHORT[b.id]) b.short = SHORT[b.id];
   const addQs = (cid, qs) => String(qs || '').split(',').map(x => x.trim()).filter(Boolean).forEach(q => { const b = qmap.get(q); if (b) b.sessions.push({ cid }); });
   const cats = Object.assign({}, EX_CATS);
   for (const line of EX_NEW.trim().split('\n')) {
@@ -1153,6 +1174,36 @@ function seqList() {
 }
 const qSub = w => [w.nNew ? '新客 ' + w.nNew + ' 位' : '', w.nCur ? '現有客戶 ' + w.nCur + ' 位' : ''].filter(Boolean).join('・');
 /* 素材的一題：一個數字（這一邊有幾位問過）＋一條單色長條；新客那邊，還沒買的人問得比較多，多一行金色小字 */
+/* 題目的短標題：分身寫的，沒有就截前面幾個字 */
+/* 從哪裡來：英文後面空一格（Threads 來的），中文直接接（電子報來的） */
+const srcWord = sr => sr + (/[A-Za-z0-9]$/.test(sr) ? ' ' : '') + '來的';
+const shortOf = b => b.short || clip(String(b.q || '').replace(/[？?]$/, ''), 9);
+/* 方塊圖的排法（squarified treemap）：面積照數字分，方塊盡量接近正方形。回傳每一塊的位置（百分比） */
+function squarify(items, W, H) {
+  const total = items.reduce((t, x) => t + x.n, 0) || 1, out = [];
+  let rest = items.map(it => ({ it, a: it.n / total * W * H })), x = 0, y = 0, w = W, h = H;
+  const worst = (row, side) => { const sum = row.reduce((t, r) => t + r.a, 0), mx = Math.max(...row.map(r => r.a)), mn = Math.min(...row.map(r => r.a)); return Math.max(side * side * mx / (sum * sum), sum * sum / (side * side * mn)); };
+  while (rest.length) {
+    const side = Math.min(w, h); let row = [rest[0]], k = 1;
+    while (k < rest.length && worst(row.concat(rest[k]), side) <= worst(row, side)) { row = row.concat(rest[k]); k++; }
+    const sum = row.reduce((t, r) => t + r.a, 0);
+    if (w >= h) { const cw = sum / h; let yy = y; for (const r of row) { const rh = r.a / cw; out.push({ x, y: yy, w: cw, h: rh, it: r.it }); yy += rh; } x += cw; w -= cw; }
+    else { const rh = sum / w; let xx = x; for (const r of row) { const rw = r.a / rh; out.push({ x: xx, y, w: rw, h: rh, it: r.it }); xx += rw; } y += rh; h -= rh; }
+    rest = rest.slice(row.length);
+  }
+  return out;
+}
+/* 一張方塊圖：一題一塊，點了進那一題 */
+function tmapHTML(rows, cls) {
+  if (!rows.length) return '';
+  const W = 100, H = 75;
+  return '<div class="tmapw"><div class="tmap ' + cls + '">' + squarify(rows, W, H).map(r => {
+    const area = r.w * r.h / (W * H), size = area < 0.06 ? ' xs' : area < 0.14 ? ' sm' : '';
+    return '<div class="tile' + size + '" style="left:' + (r.x / W * 100).toFixed(2) + '%;top:' + (r.y / H * 100).toFixed(2) + '%;width:' + (r.w / W * 100).toFixed(2) + '%;height:' + (r.h / H * 100).toFixed(2) + '%">' +
+      '<button type="button" data-go="question" data-id="' + esc(r.it.b.id) + '" aria-label="' + esc(r.it.b.q + '，' + r.it.n + ' 位問過') + '" title="' + esc(r.it.b.q) + '">' +
+      '<span class="tn">' + r.it.n + '<small>位</small></span><span class="tq">' + esc(shortOf(r.it.b)) + '</span></button></div>';
+  }).join('') + '</div></div>';
+}
 function mRow(x, max) {
   return '<button type="button" class="row" data-go="question" data-id="' + esc(x.b.id) + '" aria-label="' + esc(x.b.q + '，' + x.n + ' 位問過' + (x.obj ? '，多半是還沒買的人問的' : '')) + '"><span class="txt">' +
     '<span class="bar-top"><span class="t">' + esc(x.b.q) + '</span><span class="bar-n">' + x.n + ' 位</span></span>' +
@@ -1414,10 +1465,12 @@ const PAGE = {
     for (const u of ups) { const k = (u.when || '').slice(0, 10); let g = days.find(x => x.k === k); if (!g) days.push(g = { k, w: u.when, list: [] }); g.list.push(u); }
     const ev = u => {
       const past = dayDiff(u.when) < 0, cur = u.kind === 'current', t = upType(u), c0 = arr(u.cares)[0];
-      const ty = past ? '聊完了，點進來整理' : cur ? '現有客戶・第 ' + (sessionsOf(v.clients, u).length + 1) + ' 次' : (t || (c0 ? clip(c0.point, 14) : '還沒填表單'));
+      const ty = past ? '聊完了，點進來整理' : cur ? (u.label || '') : (t || (c0 ? clip(c0.point, 14) : '還沒填表單'));
       const d = new Date(u.when);
+      const top = [isNaN(d) ? '' : pad(d.getHours()) + ':' + pad(d.getMinutes()), cur ? '<b>現有客戶</b>' : '<b>新客</b>',
+        cur ? '第 ' + (sessionsOf(v.clients, u).length + 1) + ' 次' : (u.src ? esc(srcWord(u.src)) : '')].filter(Boolean).join('・');
       return '<button type="button" class="cev' + (cur ? ' cur' : '') + '" data-go="prep" data-id="' + esc(u.id) + '"><span class="cb" aria-hidden="true"></span><span class="ct">' +
-        '<span class="tm">' + (isNaN(d) ? '' : pad(d.getHours()) + ':' + pad(d.getMinutes())) + '</span><span class="nm">' + esc(u.name || '沒寫名字') + '</span><span class="ty">' + esc(ty) + '</span></span></button>';
+        '<span class="tm">' + top + '</span><span class="nm">' + esc(u.name || '沒寫名字') + '</span>' + (ty ? '<span class="ty">' + esc(ty) + '</span>' : '') + '</span></button>';
     };
     const day = g => { const d = new Date(g.w), today = dayDiff(g.w) === 0; return '<div class="cday"><p class="cdd' + (today ? ' today' : '') + '"><small>' + (today ? '今天' : '週' + WD[d.getDay()]) + '</small><b>' + d.getDate() + '</b></p><div class="cevs">' + g.list.map(ev).join('') + '</div></div>'; };
     const cal = ex
@@ -1452,7 +1505,7 @@ const PAGE = {
     } else {
       const t = upType(u), cares = arr(u.cares);
       const same = t ? ofKind(v.clients, 'new').filter(c => typeOf(c) === t) : [];
-      crit = [t ? '<b>' + esc(t) + '</b>' : '', u.label ? esc(u.label) : '', u.src ? esc(u.src) + ' 來的' : ''].filter(Boolean).join('・');
+      crit = [t ? '<b>' + esc(t) + '</b>' : '', u.label ? esc(u.label) : '', u.src ? esc(srcWord(u.src)) : ''].filter(Boolean).join('・');
       body = (!cares.length && !watch.length
           ? '<div class="sheet pad"><h2>他還沒填表單</h2><p class="sub">他填了之後，這裡會列出這場要注意的事。</p></div>'
           : (cares.length ? '<div class="sheet pad"><h2>他最在意的事</h2><ul class="pts">' + cares.map(c => '<li>' + esc(c.point) + '</li>').join('') + '</ul></div>' : '') + watchHTML) +
@@ -1585,21 +1638,27 @@ const PAGE = {
         (S.err.an ? '<p class="msg">' + esc(S.err.an) + '</p>' : '') + gateNote() + '</div>';
   },
 
-  /* 素材：這一頁只幫你決定「下一篇寫哪一題」。兩張短清單：拿來招生（新客最常問）、拿來教學（現有客戶最常問）；
-     一題只放在問的人比較多的那一邊，一行只有一個數字。做過的收在最下面，不會重複寫 */
+  /* 素材：這一頁只幫你決定「下一篇寫哪一題」。兩張方塊圖：拿來招生（新客最常問，金色）、拿來教學（現有客戶最常問，深灰）；
+     一題一塊，方塊越大越多人問。一題只放在問的人比較多的那一邊。做過的收在最下面，不會重複寫 */
   materials() {
     const v = V();
     if (!v.brain.length) return head('素材') + emptyCard('還沒有題目', '整理幾場諮詢之後，客人問過的問題會出現在這裡。');
     const made = new Set(v.ideas.map(i => i.brainId));
     const all = v.brain.map(b => ({ b, w: whoAsked(b) })).filter(x => x.w.nNew + x.w.nCur);
     const todo = all.filter(x => !made.has(x.b.id)), done = all.filter(x => made.has(x.b.id));
-    const sell = todo.filter(x => x.w.nNew >= x.w.nCur).map(x => { const won = x.w.gNew['成交'].length; return { b: x.b, n: x.w.nNew, obj: x.w.nNew - won > won }; }).sort((a, b) => b.n - a.n).slice(0, 5);
-    const teach = todo.filter(x => x.w.nCur > x.w.nNew).map(x => ({ b: x.b, n: x.w.nCur })).sort((a, b) => b.n - a.n).slice(0, 5);
-    const list = (title, sub, rows) => rows.length ? '<section><p class="label">' + title + '</p><div class="sheet">' + rows.map(x => mRow(x, rows[0].n)).join('') + '</div>' + (sub ? '<p class="sub hint">' + sub + '</p>' : '') + '</section>' : '';
-    return head('素材', '挑一題，做成貼文、銷售信、廣告') +
+    const sell = todo.filter(x => x.w.nNew >= x.w.nCur).map(x => ({ b: x.b, n: x.w.nNew })).sort((a, b) => b.n - a.n).slice(0, 6);
+    const teach = todo.filter(x => x.w.nCur > x.w.nNew).map(x => ({ b: x.b, n: x.w.nCur })).sort((a, b) => b.n - a.n).slice(0, 6);
+    /* 只有 1 位問的題目，方塊太小放不下字，改成方塊下面一行連結 */
+    const block = (title, rows, cls) => {
+      if (!rows.length) return '';
+      const tot = rows.reduce((t, x) => t + x.n, 0), big = rows.filter((x, i) => i < 3 || x.n / tot >= 0.08), small = rows.filter(x => !big.includes(x));
+      return '<section><p class="label">' + title + '</p>' + tmapHTML(big.length ? big : rows, cls) +
+        (big.length && small.length ? '<p class="sub hint">還有：' + small.map(x => '<button type="button" class="link" data-go="question" data-id="' + esc(x.b.id) + '">' + esc(shortOf(x.b)) + '（' + x.n + ' 位）</button>').join('、') + '</p>' : '') + '</section>';
+    };
+    return head('素材', '方塊越大，越多人問。點一題做成貼文、銷售信、廣告') +
       '<div class="sheet"><button type="button" class="row" data-go="seq"><span class="txt"><span class="t"><span class="tag gold">加購</span>銷售序列信</span><span class="s">把常被問的題目，串成一組自動寄出的信</span></span>' + CHEV + '</button></div>' +
-      list('拿來招生：新客最常問的', sell.some(x => x.obj) ? '金色那幾題，問的人多半還沒買，最適合寫成銷售信和廣告。' : '', sell) +
-      list('拿來教學：現有客戶最常問的', '', teach) +
+      block('拿來招生：新客最常問的', sell, 'sell') +
+      block('拿來教學：現有客戶最常問的', teach, 'teach') +
       (done.length ? det('done', '已經做成素材的 ' + done.length + ' 題', '<div class="flat">' + done.map(x => '<button type="button" class="row" data-go="question" data-id="' + esc(x.b.id) + '"><span class="txt"><span class="t">' + esc(x.b.q) + '</span><span class="s">' + esc(qSub(x.w)) + '</span></span>' + CHEV + '</button>').join('') + '</div>') : '');
   },
 
@@ -1647,7 +1706,9 @@ const PAGE = {
       mat = '<p class="sub">一次做成四種：Threads、IG 圖卡、銷售信、廣告。</p>' +
         '<button type="button" class="btn" data-act="mat" data-id="' + esc(b.id) + '"' + (!S.sample || ex ? ' disabled' : '') + '>把這題做成素材</button>' + gateNote();
     }
+    const won = w.gNew['成交'].length, obj = w.nNew >= w.nCur && w.nNew - won > won;
     return head(b.q, nq + ' 位問過' + (nq ? '：' + qSub(w) : ''), 'materials') +
+      (obj ? '<p class="cut">問這題的新客多半還沒買，最適合寫成銷售信和廣告。</p>' : '') +
       '<div class="sheet pad"><h2>你的回答</h2><blockquote>' + esc(b.answer || '') + '</blockquote></div>' +
       '<div class="sheet pad"><h2><label for="why-' + esc(b.id) + '">為什麼這樣回答？</label></h2><p class="sub">寫一兩句，做素材時會用到。</p>' +
         '<textarea id="why-' + esc(b.id) + '" rows="3"' + (ex ? ' disabled' : '') + ' placeholder="例：他其實是怕花了錢沒效果，所以我先講……">' + esc(b.why || '') + '</textarea>' +
@@ -1841,7 +1902,7 @@ function sessionPrompt(st, existing, text, name, kind) {
     '{'
   ].concat(fields, [
     '  "summary": "會後可以直接傳給他的訊息，格式見下面",',
-    '  "brain_new": [{"q": "問題", "type": "方法論", "force": "焦慮", "answer": "我的原話", "postable": true}],',
+    '  "brain_new": [{"q": "問題", "short": "這一題的短標題，9 個字以內", "type": "方法論", "force": "焦慮", "answer": "我的原話", "postable": true}],',
     '  "brain_repeat": [{"n": 3}]',
     '}',
     '',
@@ -1941,7 +2002,7 @@ async function saveSession(out, meta) {
     if (nNew + nRep >= 8) break;
     if (!r || !r.q || !r.answer) continue;
     await put('brain', newId(), {
-      q: str(r.q, 80), type: QTYPES.includes(r.type) ? r.type : '常見問題', force: FORCE_NAMES.includes(r.force) ? r.force : '',
+      q: str(r.q, 80), short: str(r.short, 12), type: QTYPES.includes(r.type) ? r.type : '常見問題', force: FORCE_NAMES.includes(r.force) ? r.force : '',
       answer: str(r.answer, 600), why: '', sessions: [{ cid, label: sessLabel }], postable: r.postable !== false, createdAt: Date.now()
     });
     nNew++;
