@@ -1,0 +1,2267 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>諮詢分身｜示範</title><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 版面：顧問的後台。四個分頁，每個分頁就是一張清單，點進去最多再一層。
+   樣子（第 9 版）：白紙放在淺灰底上，字是墨黑的粗黑體，重點只用一個金色；圖表是金色＋灰階。
+   好用的部分照舊：字大、按鈕大、一頁一件事、沒有術語。
+   --blue 這幾個名字是舊的：現在是「主要按鈕和選到的東西」的墨黑，--blue-soft 是「分身給的建議」的淡金底。
+   電腦版分頁在左邊，手機版在底部。刻意只做淺色，顏色都寫死。 */
+:root {
+  --bg: #F5F5F7;
+  --card: #FFFFFF;
+  --ink: #1D1D1F;
+  --sub: #6E6E73;
+  --line: #E8E8ED;
+  --line2: #D2D2D7;
+  --blue: #1D1D1F;
+  --blue-ink: #1D1D1F;
+  --blue-soft: #F7F1E4;
+  --gold: #BE9447;
+  --gold-ink: #8A6420;
+  --good: #8A6420;
+  --warn: #6E6E73;
+  --bad: #B3261E;
+  --field: #F5F5F7;
+  --c-won: #BE9447;
+  --c-mid: #5E5A54;
+  --c-lost: #CFCBC3;
+  --c-ink: #3A3A3C;
+  --font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--font); font-size: 17px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+h1, h2 { margin: 0; text-wrap: balance; line-height: 1.4; }
+h1 { font-size: 30px; font-weight: 900; letter-spacing: .01em; }
+h2 { font-size: 20px; font-weight: 900; }
+.ph { display: inline-block; }
+p, ul, ol, dl { margin: 0; }
+button, select { font: inherit; color: inherit; cursor: pointer; }
+.sub { color: var(--sub); font-size: 16px; }
+.k { color: var(--sub); font-size: 15px; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 外框 */
+.shell { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.main { max-width: 700px; margin: 0 auto; padding-block: 16px 130px; min-width: 0; }
+.hdr { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 19px; letter-spacing: .08em; }
+.brand svg { flex: none; }
+.me-btn { background: none; border: 0; padding: 8px 0; font-size: 16px; color: var(--sub); text-decoration: underline; text-underline-offset: 4px; }
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--card); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.nav button { background: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; font-size: 14px; color: var(--sub); border-radius: 12px; }
+.nav button[aria-current="page"] { color: var(--blue-ink); font-weight: 700; background: var(--blue-soft); }
+.nav svg { width: 26px; height: 26px; }
+@media (min-width: 900px) {
+  .shell { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; }
+  .nav { position: sticky; top: 24px; align-self: start; border: 0; background: none; display: flex; flex-direction: column; gap: 6px; padding: 0; margin-top: 76px; }
+  .nav button { flex-direction: row; gap: 12px; padding: 12px 16px; font-size: 17px; justify-content: flex-start; }
+  .nav svg { width: 22px; height: 22px; }
+  .main { margin: 0; padding-bottom: 72px; }
+}
+
+/* 一頁的骨架：標題 → 一張一張白紙 */
+.stack > * + * { margin-top: 20px; }
+.head h1 + p { margin-top: 4px; }
+.sheet { background: var(--card); border: 0; border-radius: 22px; overflow: hidden; }
+.pad { padding: 20px 22px 22px; }
+.pad > * + * { margin-top: 10px; }
+.sheet.soft { background: var(--blue-soft); border-color: transparent; }
+.label { font-size: 15px; font-weight: 700; color: var(--sub); margin-bottom: 8px; }
+.hint { margin-top: 10px; font-size: 15px; }
+.banner { font-size: 15px; color: var(--sub); margin-bottom: 14px; }
+.banner .sw { font-size: 15px; padding: 2px 0; margin-left: 10px; }
+.tag { display: inline-block; font-size: 13px; line-height: 1.5; padding: 0 7px; margin-right: 8px; border: 1px solid var(--line2); border-radius: 6px; color: var(--sub); background: var(--card); vertical-align: 1px; }
+.cal { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; font-size: 15px; color: var(--sub); margin-top: 6px; }
+.cal svg { width: 18px; height: 18px; flex: none; }
+.cal .on { color: var(--good); font-weight: 700; }
+.cal .tag { margin: 0; }
+
+/* 按鈕 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; padding: 0 26px; border-radius: 999px; font-size: 18px; font-weight: 700; border: 0; background: var(--blue); color: #fff; }
+.btn:hover { background: #000; }
+.btn.big { width: 100%; min-height: 58px; }
+.btn.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--line2); font-weight: 500; }
+.btn.ghost:hover { background: var(--field); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.link { background: none; border: 0; padding: 6px 0; color: var(--blue-ink); font-size: 16px; text-decoration: underline; text-underline-offset: 4px; text-align: left; }
+.link.danger { color: var(--bad); }
+.back { background: none; border: 0; padding: 6px 0; color: var(--blue-ink); font-size: 17px; margin-bottom: 6px; }
+.btns { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* 清單的一列 */
+.row { width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; background: none; border: 0; border-top: 1px solid var(--line); padding: 16px 20px; min-height: 68px; }
+.row:first-child { border-top: 0; }
+button.row:hover { background: var(--field); }
+.row .txt { flex: 1; min-width: 0; }
+.row .t { display: block; font-weight: 700; font-size: 18px; line-height: 1.5; }
+.row .s { display: block; color: var(--sub); font-size: 15px; line-height: 1.6; }
+.row .s b { color: var(--ink); font-weight: 500; margin-right: 8px; }
+@media (max-width: 599px) { .row .s b { display: block; margin-right: 0; } }
+.when { flex: none; width: 88px; }
+.when b { display: block; font-size: 17px; line-height: 1.4; color: var(--blue-ink); }
+.when span { display: block; font-size: 14px; color: var(--sub); }
+.chev { color: var(--line2); font-size: 26px; line-height: 1; }
+.st { font-size: 15px; font-weight: 700; white-space: nowrap; color: var(--sub); }
+.st::before { content: "●"; font-size: 10px; margin-right: 5px; vertical-align: 2px; color: var(--line2); }
+.st[data-r="成交"] { color: var(--ink); }
+.st[data-r="成交"]::before { color: var(--c-won); }
+.st[data-r="考慮中"]::before { color: var(--c-mid); }
+.st[data-r="沒成交"]::before { color: var(--c-lost); -webkit-text-stroke: 1px var(--line2); }
+.made { margin-left: 10px; color: var(--good); font-weight: 700; }
+
+/* 內容 */
+ol.watch { list-style: none; padding: 0; counter-reset: w; }
+ol.watch li { counter-increment: w; position: relative; padding-left: 34px; font-size: 18px; line-height: 1.7; }
+ol.watch li + li { margin-top: 12px; }
+ol.watch li::before { content: counter(w); position: absolute; left: 2px; top: -1px; font-weight: 900; font-size: 20px; color: var(--gold-ink); }
+ul.pts { padding-left: 1.2em; }
+ul.pts li + li { margin-top: 6px; }
+.care + .care, .past > div + div { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+.care .p { font-size: 18px; }
+.past b { font-size: 18px; margin-right: 10px; }
+dl.plain dt { font-size: 15px; color: var(--sub); margin-top: 14px; }
+dl.plain dt:first-child { margin-top: 0; }
+dl.plain dd { margin: 0; font-size: 18px; }
+blockquote { margin: 0; font-size: 18px; line-height: 1.85; padding-left: 16px; border-left: 3px solid var(--gold); }
+pre.msgbox { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 17px; background: var(--field); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0; }
+.choices { display: flex; flex-wrap: wrap; gap: 10px; }
+.choices button { min-height: 52px; padding: 0 20px; border-radius: 14px; border: 2px solid var(--line2); background: var(--card); font-size: 18px; }
+.choices button[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-ink); font-weight: 700; }
+.choices button[aria-pressed="true"]::before { content: "✓ "; }
+.choices button:disabled { opacity: .55; cursor: not-allowed; }
+select { min-height: 52px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line2); background: var(--field); font-size: 18px; max-width: 100%; }
+select:disabled { opacity: .6; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--field); border: 1px solid var(--line); border-radius: 14px; padding: 4px; }
+.tabs button { min-height: 46px; border: 0; background: none; border-radius: 10px; font-size: 16px; padding: 0 2px; color: var(--sub); }
+.tabs button[aria-selected="true"] { background: var(--card); font-weight: 700; color: var(--blue-ink); box-shadow: 0 1px 3px rgba(35, 24, 21, .14); }
+/* 新客／現有客戶的切換：選到的是黑底白字 */
+.kt { display: grid; gap: 4px; background: var(--card); border-radius: 14px; padding: 4px; }
+.kt button { min-height: 46px; border: 0; background: none; border-radius: 10px; font-size: 16px; padding: 0 4px; color: var(--sub); white-space: nowrap; }
+.kt button[aria-selected="true"] { background: var(--ink); color: #fff; font-weight: 700; }
+p.q { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+/* 分析的每一張卡：問題 → 一句答案 → 圖 */
+.ans { font-size: 18px; font-weight: 700; line-height: 1.6; }
+.trend .tr { padding: 12px 0; border-top: 1px solid var(--line); }
+.trend .tr:first-child { border-top: 0; padding-top: 4px; }
+.trend .t { font-weight: 700; font-size: 17px; margin-bottom: 6px; }
+.tl { display: grid; grid-template-columns: 64px minmax(0, 1fr) 78px; align-items: center; gap: 10px; font-size: 14px; color: var(--sub); }
+.tl + .tl { margin-top: 6px; }
+.tb { display: block; height: 10px; background: var(--field); border-radius: 5px; overflow: hidden; }
+.tb span { display: block; height: 100%; background: var(--c-lost); border-radius: 5px; }
+.tl.now { color: var(--ink); font-weight: 700; }
+.tl.now .tb span { background: var(--c-won); }
+.tv { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tv small { font-weight: 400; color: var(--sub); margin-left: 4px; font-size: 12px; }
+.flat .row { padding-left: 0; padding-right: 0; }
+/* 清單右邊的大數字（客人頁每一類有幾位） */
+/* 首頁的日曆：一天一段，左邊日期、右邊當天的每一場；新客金色、現有客戶深灰 */
+.callegend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 15px; color: var(--sub); }
+.callegend span { white-space: nowrap; }
+.callegend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+.cday { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 14px 16px; border-top: 1px solid var(--line); }
+.cday:first-child { border-top: 0; }
+.cdd { text-align: center; padding-top: 2px; }
+.cdd small { display: block; font-size: 13px; color: var(--sub); line-height: 1.4; }
+.cdd b { display: block; font-size: 24px; font-weight: 900; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.cdd.today small { color: var(--ink); font-weight: 700; }
+.cdd.today b { width: 38px; height: 38px; line-height: 38px; margin: 2px auto 0; border-radius: 50%; background: var(--ink); color: #fff; font-size: 19px; }
+.cevs { display: grid; gap: 8px; min-width: 0; }
+.cev { display: flex; gap: 12px; width: 100%; text-align: left; border: 0; border-radius: 12px; padding: 10px 12px; background: var(--blue-soft); min-height: 64px; }
+.cev .cb { flex: none; width: 4px; border-radius: 2px; background: var(--gold); }
+.cev.cur { background: var(--field); }
+.cev.cur .cb { background: var(--c-ink); }
+.cev .ct { flex: 1; min-width: 0; }
+.cev .tm { display: block; font-size: 14px; color: var(--sub); font-variant-numeric: tabular-nums; line-height: 1.4; }
+.cev .nm { display: block; font-size: 18px; font-weight: 700; line-height: 1.45; }
+.cev .ty { display: block; font-size: 15px; color: var(--ink); line-height: 1.5; }
+.cev.cur .ty { color: var(--sub); }
+/* 金色的一句：首頁的「切入」、客人頁的「怎麼解」 */
+.cut { display: block; color: var(--gold-ink); font-size: 15px; line-height: 1.6; margin-top: 2px; }
+.cut b { font-weight: 700; margin-right: 8px; }
+.crit { font-size: 16px; color: var(--ink); margin-top: 6px; }
+.crit b { font-weight: 700; }
+.sr { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--line); }
+.sr .h { font-size: 18px; font-weight: 700; line-height: 1.6; }
+.sr .h small { font-size: 14px; font-weight: 400; color: var(--sub); margin-left: 8px; }
+.big { flex: none; font-weight: 900; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.big small { font-size: 14px; font-weight: 400; color: var(--sub); margin-left: 3px; }
+/* 這幾件事要注意：小字問題 → 粗體答案 → 兩個大數字 → 收起來的細節 */
+.fd { padding: 20px 0; border-top: 1px solid var(--line); }
+.fds > .fd:first-child { border-top: 0; padding-top: 4px; }
+.fds > .fd:last-child { padding-bottom: 0; }
+.fq { color: var(--sub); font-size: 15px; }
+.fh { font-size: 19px; font-weight: 900; line-height: 1.5; margin-top: 2px; }
+.fs { display: flex; align-items: flex-start; gap: 16px; margin-top: 12px; }
+.fs > span { display: flex; flex-direction: column; min-width: 0; flex: 1 1 0; }
+.fs i { flex: none; }
+.fc { font-size: 14px; color: var(--sub); margin-top: 12px; }
+.fc + .fs { margin-top: 2px; }
+.fs b { font-size: 34px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fs small { font-size: 14px; color: var(--sub); margin-top: 4px; }
+.fs i { font-style: normal; font-size: 26px; line-height: 1.3; color: var(--sub); }
+details.fm { margin-top: 12px; }
+details.fm > summary { list-style: none; cursor: pointer; color: var(--blue-ink); font-size: 16px; text-decoration: underline; text-underline-offset: 4px; display: inline-block; padding: 4px 0; }
+details.fm > summary::-webkit-details-marker { display: none; }
+details.fm[open] > summary { margin-bottom: 4px; }
+.mr { padding: 10px 0; border-top: 1px solid var(--line); }
+.mr:first-child { border-top: 0; }
+.mr .mt { display: flex; justify-content: space-between; gap: 12px; font-size: 16px; }
+.mr .mt b { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mr .mb { display: block; height: 8px; background: var(--field); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+.mr .mb span { display: block; height: 100%; background: var(--c-won); border-radius: 4px; }
+.mr .mb.ink span { background: var(--c-ink); }
+/* 銷售序列信（加購） */
+.tag.gold { border-color: var(--gold); color: var(--gold-ink); }
+details.sqi > summary { justify-content: flex-start; gap: 14px; font-weight: 400; }
+.sqd { flex: none; width: 64px; color: var(--sub); font-size: 15px; }
+.sqt { flex: 1; min-width: 0; }
+.sqt b { display: block; font-weight: 700; font-size: 17px; line-height: 1.5; }
+.sqt small { display: block; color: var(--sub); font-size: 14px; line-height: 1.5; }
+.seq > * + * { margin-top: 10px; }
+.checks2 { display: grid; gap: 10px; margin-top: 8px; }
+.ck { display: flex; gap: 12px; align-items: flex-start; font-size: 17px; line-height: 1.6; cursor: pointer; }
+.ck input { width: 22px; height: 22px; margin-top: 3px; flex: none; accent-color: var(--ink); }
+.ck small { display: block; color: var(--sub); font-size: 14px; }
+.care-p { font-size: 18px; line-height: 1.7; }
+/* 素材：銷售信（收件匣看到的主旨、預覽 → 內文 → 一顆按鈕 → P.S.） */
+.offs { position: absolute; left: -9999px; top: 0; width: 600px; white-space: pre-wrap; }
+.mail { border: 1px solid var(--line2); border-radius: 16px; overflow: hidden; background: var(--card); }
+.mail-h { padding: 14px 16px; background: var(--field); border-bottom: 1px solid var(--line); }
+.mail-h p { display: flex; gap: 12px; font-size: 16px; line-height: 1.7; }
+.mail-h .mk { flex: none; font-size: 14px; color: var(--sub); line-height: 1.95; }
+.mail-h b { font-weight: 700; font-size: 17px; }
+.mail-h span + span { color: var(--sub); }
+.mail-b { padding: 18px 16px 20px; font-size: 17px; line-height: 1.85; }
+.mail-b p { white-space: pre-wrap; overflow-wrap: anywhere; text-wrap: pretty; }
+.mail-b p + p { margin-top: 16px; }
+.mail-btn { display: inline-block; padding: 12px 24px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 700; font-size: 16px; line-height: 1.5; }
+/* 素材：廣告（動態消息裡看到的樣子），上面一排選開頭 */
+.chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-width: 360px; }
+.chips button { min-height: 44px; padding: 0 4px; border-radius: 999px; border: 1px solid var(--line2); background: var(--card); font-size: 15px; color: var(--sub); white-space: nowrap; }
+.chips button[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 700; }
+.ad { max-width: 360px; border: 1px solid var(--line2); border-radius: 16px; overflow: hidden; background: var(--card); }
+.ad-h { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
+.ad-av { flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--ink); box-shadow: inset 0 0 0 2px var(--card), 0 0 0 1.5px var(--gold); }
+.ad-h b { display: block; font-size: 15px; line-height: 1.35; }
+.ad-h small { display: block; font-size: 13px; line-height: 1.35; color: var(--sub); }
+.ad-txt { white-space: pre-wrap; overflow-wrap: anywhere; text-wrap: pretty; font-size: 16px; line-height: 1.7; padding: 10px 14px 14px; }
+.ad-img { aspect-ratio: 4 / 5; background: var(--ink); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; text-align: center; font-size: 30px; font-weight: 900; line-height: 1.45; letter-spacing: .02em; }
+.ad-img .ph { text-wrap: balance; }
+.ad-img::before { content: ""; width: 44px; height: 3px; border-radius: 2px; background: var(--gold); }
+.ad-f { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--field); }
+.ad-ft { flex: 1; min-width: 0; }
+.ad-ft b { display: block; font-size: 16px; line-height: 1.45; text-wrap: balance; }
+.ad-ft small { display: block; font-size: 13px; line-height: 1.5; color: var(--sub); }
+.ad-cta { flex: none; padding: 9px 14px; border-radius: 8px; background: var(--line2); font-weight: 700; font-size: 15px; line-height: 1.4; white-space: nowrap; }
+details.sheet > summary { list-style: none; cursor: pointer; padding: 16px 20px; font-weight: 700; font-size: 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+details.sheet > summary::-webkit-details-marker { display: none; }
+details.sheet > summary::after { content: "＋"; color: var(--sub); font-weight: 400; }
+details.sheet[open] > summary::after { content: "－"; }
+details.sheet > .pad { padding-top: 0; }
+
+/* 圖表：橫條。長度＝幾位，顏色＝後來有沒有買；同樣的數字用文字寫在條的下面 */
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 15px; color: var(--sub); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+.bar-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.bar-top .t { flex: 1; min-width: 0; }
+.bar-n { font-weight: 900; font-size: 17px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.track { display: block; margin: 8px 0 6px; }
+.bar { display: flex; gap: 2px; height: 12px; border-radius: 6px; overflow: hidden; }
+.seg { height: 100%; min-width: 6px; }
+.tall { display: flex; gap: 2px; height: 30px; }
+.tall span { display: flex; align-items: center; padding-left: 10px; font-weight: 700; font-size: 15px; min-width: 30px; font-variant-numeric: tabular-nums; }
+.tall span:last-child { border-radius: 0 4px 4px 0; }
+.chart { margin-top: 12px; }
+.crow { padding: 12px 0; border-top: 1px solid var(--line); }
+.chart .crow:first-child { border-top: 0; padding-top: 0; }
+.chart .crow:last-child { padding-bottom: 0; }
+.crow .t { display: block; font-weight: 700; font-size: 18px; line-height: 1.5; }
+.crow .s { display: block; color: var(--sub); font-size: 15px; line-height: 1.6; }
+.crow .rk { display: inline-block; min-width: 1.3em; color: var(--gold-ink); font-weight: 900; font-size: 20px; line-height: 1; }
+.donut { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 12px; }
+.donut svg { flex: none; width: 156px; height: 156px; }
+.donut .dnum { font-size: 27px; font-weight: 900; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.donut .dk { font-size: 10.5px; fill: var(--sub); }
+.dleg { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 150px; max-width: 260px; }
+.dleg li { display: flex; align-items: center; gap: 10px; font-size: 17px; line-height: 2; }
+.dleg i { flex: none; width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+.dleg b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.cols { display: flex; align-items: flex-end; gap: 12px; margin-top: 10px; }
+.col { flex: 0 1 60px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.col .n { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.col .stk { width: 100%; display: flex; flex-direction: column-reverse; gap: 2px; }
+.col .stk span { display: block; width: 100%; min-height: 6px; }
+.col .stk span:last-child { border-radius: 6px 6px 0 0; }
+.col .stk span { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04); }
+.col .m { font-size: 15px; color: var(--sub); white-space: nowrap; }
+.qcols { display: flex; align-items: flex-end; gap: 12px; margin-top: 16px; }
+.qcol { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.qcol .n { font-size: 14px; color: var(--sub); white-space: nowrap; }
+.qcol .n b { font-size: 28px; font-weight: 900; line-height: 1; color: var(--ink); margin-right: 3px; font-variant-numeric: tabular-nums; }
+.qcol .qbar { display: block; width: 100%; max-width: 60px; min-height: 8px; background: var(--c-ink); border-radius: 8px 8px 0 0; }
+.qcol .m { font-size: 15px; font-weight: 700; line-height: 1.4; text-align: center; text-wrap: balance; min-height: calc(2.8em + 9px); margin-top: -8px; padding-top: 8px; border-top: 1px solid var(--line2); width: 100%; }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: #fff; font-size: 14px; line-height: 1.6; padding: 8px 12px; border-radius: 10px; max-width: 260px; }
+
+/* 表單 */
+label.q { display: block; font-size: 18px; font-weight: 700; }
+label.q .opt { font-weight: 400; font-size: 15px; color: var(--sub); margin-left: 8px; }
+input[type="text"], input[type="date"], input[type="datetime-local"], textarea {
+  width: 100%; font: inherit; font-size: 18px; color: var(--ink); background: var(--field);
+  border: 1px solid var(--line2); border-radius: 14px; padding: 12px 14px; margin-top: 6px;
+}
+textarea { resize: vertical; line-height: 1.8; display: block; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29, 29, 31, .12); }
+input:disabled, textarea:disabled { opacity: .6; }
+.field + .field { margin-top: 20px; }
+.msg { color: var(--bad); font-size: 16px; }
+.ok { color: var(--good); font-size: 16px; }
+.warnline { color: var(--warn); font-size: 15px; }
+
+/* 整理中 */
+.working { text-align: center; padding: 34px 22px; }
+.working > * + * { margin-top: 10px; }
+.spin { width: 46px; height: 46px; margin: 0 auto; border-radius: 50%; border: 5px solid var(--blue-soft); border-top-color: var(--blue); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
+ul.checks { list-style: none; padding: 0; }
+ul.checks li { padding-left: 30px; position: relative; font-size: 18px; }
+ul.checks li + li { margin-top: 6px; }
+ul.checks li::before { content: "✓"; position: absolute; left: 0; color: var(--good); font-weight: 700; }
+.empty { text-align: center; padding: 30px 20px; color: var(--sub); }
+.empty h2 { color: var(--ink); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 9; background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 16px; max-width: calc(100% - 32px); }
+@media (min-width: 900px) { .toast { bottom: 28px; } }
+</style>
+
+<div class="shell">
+  <nav class="nav" aria-label="分頁" id="nav">
+    <button type="button" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>首頁</button>
+    <button type="button" data-go="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.8c1.9.7 3.1 2.4 3.5 5.2"/></svg>客人</button>
+    <button type="button" data-go="analysis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 20v-8"/><path d="M12 20V5"/><path d="M18 20v-11"/></svg>分析</button>
+    <button type="button" data-go="materials"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="M14 6l3 3"/></svg>素材</button>
+  </nav>
+
+  <div class="main">
+    <header class="hdr">
+      <div class="brand"><svg width="44" height="26" viewBox="0 0 44 26" aria-hidden="true"><circle cx="12" cy="13" r="10" fill="#1D1D1F"/><circle cx="19" cy="13" r="10" fill="none" stroke="#BE9447" stroke-width="1.5"/><circle cx="26" cy="13" r="10" fill="none" stroke="#BE9447" stroke-width="1.5" opacity=".6"/><circle cx="33" cy="13" r="10" fill="none" stroke="#BE9447" stroke-width="1.5" opacity=".3"/></svg>諮詢分身</div>
+      <button type="button" class="me-btn" data-go="me">我的資料</button>
+    </header>
+    <p class="banner" id="banner" hidden></p>
+
+    <!-- 會隨資料更新的頁面 -->
+    <div id="view" class="stack"></div>
+
+    <!-- 自己加一場接下來的諮詢（固定的表單） -->
+    <section id="add-view" class="stack" hidden>
+      <div class="head">
+        <button type="button" class="back" data-back="home">‹ 回上一頁</button>
+        <h1>自己加一場</h1>
+        <p class="sub">貼上他事前填的資料，分身幫你準備。</p>
+      </div>
+      <form id="add-form" class="stack" autocomplete="off">
+        <div class="sheet pad">
+          <div class="field"><label class="q" for="a-name">客人的名字</label><input type="text" id="a-name" placeholder="例：王小姐"></div>
+          <div class="field"><label class="q" for="a-when">什麼時候聊</label><input type="datetime-local" id="a-when"></div>
+          <div class="field">
+            <label class="q" for="a-form">他事前填的資料</label>
+            <textarea id="a-form" rows="6" placeholder="在這裡貼上"></textarea>
+            <button type="button" class="link" id="a-sample">沒有資料？用範例試試看</button>
+          </div>
+        </div>
+        <div>
+          <button type="submit" class="btn big" id="a-go">幫我準備這一場</button>
+          <p class="msg" id="a-msg" aria-live="polite" style="margin-top:10px"></p>
+          <p class="sub" id="a-gate" style="margin-top:6px"></p>
+        </div>
+      </form>
+      <div id="add-working" class="sheet working" hidden>
+        <div class="spin" aria-hidden="true"></div>
+        <h2>正在準備，大約半分鐘</h2>
+        <p class="sub">分身在對照你以前的客人。</p>
+        <button type="button" class="btn ghost" data-stop="prep">停止</button>
+      </div>
+    </section>
+
+    <!-- 整理一場聊完的諮詢（固定的表單，打字時不會被重畫） -->
+    <section id="new-view" class="stack" hidden>
+      <div class="head">
+        <button type="button" class="back" data-back="home">‹ 回上一頁</button>
+        <h1>整理一場聊完的諮詢</h1>
+        <p class="sub">貼上逐字稿，分身幫你整理。</p>
+      </div>
+      <form id="new-form" class="stack" autocomplete="off">
+        <div class="sheet pad">
+          <div class="field">
+            <p class="q" id="n-kind-q">這是哪一種？</p>
+            <div class="choices" role="group" aria-labelledby="n-kind-q"><button type="button" data-nkind="new" aria-pressed="true">新客諮詢</button><button type="button" data-nkind="current" aria-pressed="false">現有客戶</button></div>
+          </div>
+          <div class="field"><label class="q" for="n-name">客人的名字<span class="opt" id="n-name-opt">可以不填</span></label><input type="text" id="n-name" placeholder="例：王小姐"><p class="sub" id="n-kind-hint" hidden style="margin-top:6px">名字要跟之前寫的一樣，才會接在同一位客人下面。</p></div>
+          <div class="field"><label class="q" for="n-date">哪一天聊的</label><input type="date" id="n-date"></div>
+          <div class="field">
+            <label class="q" for="n-text">逐字稿</label>
+            <p class="sub">不會被存起來，分身只留重點。</p>
+            <textarea id="n-text" rows="9" placeholder="在這裡貼上"></textarea>
+            <p class="sub num" id="n-count" style="margin-top:4px">目前 0 字</p>
+            <div class="btns" style="margin-top:10px">
+              <label class="btn ghost" for="n-file" style="cursor:pointer">選一個檔案</label>
+              <input type="file" id="n-file" class="vh" accept=".txt,.srt,.vtt,.md,text/plain">
+              <button type="button" class="link" id="n-sample">沒有逐字稿？用範例試試看</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <button type="submit" class="btn big" id="n-go">開始整理</button>
+          <p class="msg" id="n-msg" aria-live="polite" style="margin-top:10px"></p>
+          <p class="sub" id="n-gate" style="margin-top:6px"></p>
+        </div>
+      </form>
+      <div id="new-working" class="sheet working" hidden>
+        <div class="spin" aria-hidden="true"></div>
+        <h2>正在整理，大約 1～2 分鐘</h2>
+        <p class="sub num" id="n-elapsed" aria-live="polite">已經過了 0 秒</p>
+        <button type="button" class="btn ghost" data-stop="run">停止</button>
+      </div>
+      <div id="new-done" class="stack" hidden></div>
+    </section>
+
+    <!-- 我的資料（固定的表單） -->
+    <section id="me-view" class="stack" hidden>
+      <div class="head">
+        <button type="button" class="back" data-back="home">‹ 回上一頁</button>
+        <h1>我的資料</h1>
+        <p class="sub">分身會參考這幾句。素材只會用你寫在這裡的數字。</p>
+      </div>
+      <form id="me-form" class="sheet pad" autocomplete="off">
+        <div class="field"><label class="q" for="m-who">你是做什麼的？</label><input type="text" id="m-who" placeholder="例：做職涯諮詢 8 年，帶過 120 位轉職的上班族"></div>
+        <div class="field"><label class="q" for="m-sells">你賣什麼方案？</label><input type="text" id="m-sells" placeholder="例：三個月轉職陪跑"></div>
+        <div class="field"><label class="q" for="m-cw">你都怎麼稱呼客人？</label><input type="text" id="m-cw" placeholder="客人（也可以寫家長、學員）"></div>
+        <div class="field"><label class="q" for="m-invite">貼文最後想加的一句話</label><input type="text" id="m-invite" placeholder="你也是這樣的話，可以私訊我聊聊你現在的狀況。"></div>
+        <div class="btns" style="margin-top:22px"><button type="submit" class="btn">儲存</button><span class="ok" id="m-msg" aria-live="polite"></span></div>
+      </form>
+      <div class="sheet pad">
+        <h2>Google 行事曆</h2>
+        <p>這一版是示範畫面，還沒有真的接上。接上之後，行事曆裡的諮詢會自己出現在首頁，他填的表單也會一起帶進來。</p>
+      </div>
+      <div class="sheet pad">
+        <h2>資料存在哪裡？</h2>
+        <p>只有你自己看得到。把這個網頁分享給別人，他們也只會看到自己的資料。</p>
+        <p>逐字稿不會被存起來。分身讀完之後，只留下整理好的重點。</p>
+        <p class="sub">分身是用你自己的 Claude 帳號在整理，第一次用會跳出詢問，按「允許」就好。</p>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ---------- 小工具 ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clip = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; };
+const str = (x, n = 400) => clip(typeof x === 'string' ? x.trim() : (x == null ? '' : String(x)), n);
+const arr = x => Array.isArray(x) ? x : [];
+const pad = n => String(n).padStart(2, '0');
+const newId = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const localISO = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+const md = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); return m ? (+m[2]) + '/' + (+m[3]) : ''; };
+const fmt = n => Number(n || 0).toLocaleString('zh-TW');
+const WD = ['日', '一', '二', '三', '四', '五', '六'];
+function whenText(s) { const d = new Date(s); if (isNaN(d)) return ''; return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function whenShort(s) { const d = new Date(s); if (isNaN(d)) return ''; return '週' + WD[d.getDay()] + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function dayDiff(s) { const d = new Date(s), n = new Date(); if (isNaN(d)) return 0; return Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 86400000); }
+function relText(s) { const k = dayDiff(s); return k === 0 ? '今天' : k === 1 ? '明天' : k === 2 ? '後天' : k > 2 ? k + ' 天後' : '聊完了'; }
+function plusDays(n, h) { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(h, 0, 0, 0); return localISO(d); }
+
+const MAXC = 65000;
+const QTYPES = ['方法論', '常見問題', '產品問題', '猶豫怎麼接'];
+const QTYPE_WORD = { '方法論': '問做法', '常見問題': '問自己行不行', '產品問題': '問費用和方案', '猶豫怎麼接': '說還要考慮' };
+const FORCE_NAMES = ['推力', '拉力', '焦慮', '習慣'];
+/* 客人的分類：他最在意、最猶豫的事。畫面上顯示成「在意費用」的客人、「怕沒效果」的客人。 */
+const CONCERNS = ['在意費用', '怕沒效果', '怕自己做不到', '沒時間', '要問家人', '想先自己試', '還在比較別家', '其他'];
+const OLD_TYPE = { '費用': '在意費用', '時間不夠': '沒時間', '跟別家比較': '還在比較別家' };
+const RESULTS = ['成交', '考慮中', '沒成交'];
+const RESULT_WORD = { '成交': '成交了', '考慮中': '還在考慮', '沒成交': '沒成交', '': '還不知道' };
+const RES_ROWS = [['成交', '成交了', 'var(--c-won)', '#fff'], ['考慮中', '還在考慮', 'var(--c-mid)', '#231815'], ['沒成交', '沒成交', 'var(--c-lost)', '#fff'], ['', '還不知道', 'var(--line2)', '#231815']];
+const TELLS = [[/——|—/, '破折號'], [/不是[^。！？\n]{0,24}而是/, '「不是…而是」的句子'], [/你是否也/, '「你是否也」'], [/讓我們一起/, '「讓我們一起」'], [/你覺得呢[？?]/, '結尾問「你覺得呢」'], [/#[^\s#]/, 'hashtag']];
+const MTABS = [['threads', 'Threads'], ['ig', 'IG 圖卡'], ['newsletter', '銷售信'], ['ad', '廣告']];
+/* 成交、還沒成交的原因先分大類：圖上一類一條，下面一行寫這一類最常出現的事 */
+const WON_CATS = ['信任我', '喜歡我的風格', '方案剛好符合', '價格可以接受', '現在就想解決', '其他'];
+const LOST_CATS = ['價格考量', '怕沒效果', '怕自己做不到', '時機還沒到', '要問家人', '想先自己試', '還在比較別家', '其他'];
+/* 廣告一次做三則，開頭各不一樣（Meta 會把太像的素材當成同一則） */
+const AD_ANGLES = ['客人的原話', '我的做法', '我的看法'];
+const AD_CTAS = ['傳送訊息', '了解更多', '立即預約'];
+/* 現有客戶：同一位會聊很多次，看的是續約。結果沿用同一組鍵，畫面上的字不一樣 */
+const RW = { new: RESULT_WORD, current: { '成交': '續約了', '考慮中': '還在考慮', '沒成交': '沒續約', '': '還沒到期' } };
+const CUR_WON_CATS = ['看到成果', '信任我', '喜歡我的帶法', '還有下一個目標', '其他'];
+const CUR_LOST_CATS = ['目標達成了', '價格考量', '時間不夠', '想先自己做', '看不到進展', '其他'];
+/* 新客從哪裡知道你、這場談到哪一步（分身從表單和逐字稿自己抓，不用另外填） */
+const SOURCES = ['Threads', 'IG', '電子報', '朋友介紹', 'Google 搜尋', '其他'];
+const REACH = ['沒介紹方案', '介紹了方案', '講了價格', '約好回覆時間'];
+const REACH_LABEL = ['沒介紹方案', '介紹了方案，沒講價格', '講了價格，沒約回覆時間', '約好回覆時間，還是沒成交'];
+const DB_CODES = { invalid_argument: 1, quota_exceeded: 1, resource_exhausted: 1, unavailable: 1, revoked: 1 };
+
+/* ---------- 示範資料（虛構的職涯顧問，只拿來示範，不會寫進你的資料） ---------- */
+const EX_TRANSCRIPT = `顧問：阿哲你好，今天大概 40 分鐘，我們先聊你現在的狀況，最後我再跟你說我會怎麼建議。你先講講看，現在最想解決的是什麼？
+客人：我做後端工程師七年了，這一年一直想轉 PM。從三月到現在投了大概二十幾份 PM 的缺，只有兩家約面試，兩家都沒上。
+顧問：二十幾份裡面兩個面試，那兩次面試，對方最後問比較多的是什麼？
+客人：都問我有沒有帶過產品，我就講我在團隊裡會跟 PM 討論需求，但講完感覺他們沒什麼反應。
+顧問：嗯，這很常見。工程師轉 PM，最常掉分的地方是把自己講成配合 PM 的人。面試官要聽的是你自己做過什麼判斷。你有沒有哪一次，是你決定功能要先做哪個、不做哪個？
+客人：有啊，去年結帳流程那個專案，原本要做三個功能，我跟主管說先做一個，因為另外兩個用的人很少，後來那個上線，轉換率有變好。
+顧問：這個就是你的 PM 經驗，只是你沒有把它講出來。我們陪跑第一個月做的，就是把你這七年裡這種判斷挖出來，改成履歷和面試的故事。
+客人：那你們跟線上那種 PM 課差在哪？我去年上過一個，八千多，看完還是不知道履歷怎麼寫。
+顧問：線上課教的是 PM 在做什麼，這個你其實都知道了。你缺的是把你自己的經驗翻成 PM 的說法，這要有人看著你的履歷一句一句改，面試前一起演練。我們每週會看一次你投出去的回覆率，回覆率沒動，我們就改。
+客人：可是我完全沒有 PM 的頭銜，真的轉得過去嗎？
+顧問：頭銜不是重點。我帶過的工程師，多半是從技術型 PM 或產品工程這類職缺先進去，這類缺會把工程背景當加分。我們不會一開始就去投最難的那種。
+客人：那如果三個月都沒找到怎麼辦？
+顧問：三個月我會先跟你約好看兩個數字：投遞的回覆率，跟面試進到第二關的比例。這兩個有在往上，代表方向對，只是時間問題。如果三個月結束還沒拿到 offer，我們會照當時的數字排下一步，我不會讓你一個人自己摸索。
+客人：轉過去薪水會不會掉很多？
+顧問：技術型 PM 的起薪通常跟資深工程師差不多，有些會低一點。這個我們可以在投之前先把你能接受的底線講清楚，不符合的缺就不投。
+客人：好，我大概懂了。這個我要回去跟我老婆討論一下，因為費用不算小。
+顧問：當然，這是家裡的決定。我今天介紹的是三個月轉職陪跑。你們討論的時候，如果她有想問的，可以直接把問題傳給我，我回給你們。這週五前跟我說一聲就好，不管要不要開始都跟我說，我好排時間。
+客人：好，週五前我回你。`;
+const EX_FORM = '做行政 5 年，想轉資料分析。之前買過兩個線上課，都沒看完。這次想先知道費用，還有如果沒效果能不能退費。';
+const EX_TRANSCRIPT_CUR = `顧問：小芸，上次說好先問客人的預算，這兩週有試嗎？
+客人：有，報了兩個案子。一個客人說太貴，我差點就直接降價了。
+顧問：後來呢？
+客人：我照你說的，先問他預算多少。他說大概只有我報價的一半。
+顧問：那你怎麼回？
+客人：我說那可以先做首頁，其他頁之後再做。他答應了。
+顧問：很好，這樣價錢沒有降，你也沒有多做。這次降了，下一個客人就很難回到原價。另一個案子呢？
+客人：還在等回覆。我想問，報完價等多久，可以再問一次？
+顧問：三天沒回，就傳一句：「想確認一下報價有沒有問題，有想調整的地方都可以跟我說。」只問一次就好。
+客人：好。那下次我想先整理作品集的第三個案子。
+顧問：可以，下次見面前先把改之前、改之後的圖放好，我們再一起寫說明。`;
+
+const EX = {
+  upcoming: [
+    { id: 'eu1', cal: true, name: 'Ken', when: plusDays(1, 14), label: '行政想轉資料分析', type: '在意費用', form: EX_FORM,
+      cares: [{ point: '想先知道費用和退費', from: '這次想先知道費用，還有如果沒效果能不能退費' }, { point: '怕這次又半途而廢', from: '之前買過兩個線上課，都沒看完' }],
+      watch: ['費用和退費，一開始就講清楚', '先別急著介紹方案內容', '先問他前兩個課為什麼沒看完'],
+      caution: '「在意費用」的客人才 3 位，先當參考。' },
+    { id: 'eu4', cal: true, name: 'Sandy', when: plusDays(1, 20), label: '業務想轉行銷', type: '怕沒效果',
+      form: '做業務 4 年，想轉行銷。去年上過一個行銷轉職班，結業後投了十幾份都沒上。想知道這次要怎麼確定有用。',
+      cares: [{ point: '怕這次又沒轉成', from: '去年上過一個行銷轉職班，結業後投了十幾份都沒上' }, { point: '想知道怎麼確定有用', from: '想知道這次要怎麼確定有用' }],
+      watch: ['先講三個月會看哪兩個數字', '問她上次是停在哪一關', '別只說「做了就知道」'],
+      caution: '「怕沒效果」的客人才 2 位，先當參考。' },
+    { id: 'eu2', cal: true, name: 'Mia', when: plusDays(3, 10), label: '護理師想轉職', type: '怕自己做不到',
+      form: '做護理師 6 年，輪班到身體受不了，想轉白天的工作。看了三個月職缺，不知道自己除了護理還能做什麼。',
+      cares: [{ point: '覺得自己只會護理', from: '不知道自己除了護理還能做什麼' }],
+      watch: ['請她講一件自己做過的判斷', '先給一個比較近的第一步', '結束前問她最猶豫哪一點'],
+      caution: '「怕自己做不到」的客人才 3 位，先當參考。' },
+    { id: 'eu5', cal: true, name: '阿傑', when: plusDays(4, 19), label: '工程師想轉產品', type: '想先自己試',
+      form: '做韌體工程師 8 年，想轉產品經理。打算先自己投三個月看看，想聽聽你的建議再決定。',
+      cares: [{ point: '打算先自己投三個月', from: '打算先自己投三個月看看' }],
+      watch: ['先問他打算自己試到什麼時候', '問他怎麼判斷自己試得順不順', '約一個回頭聊的時間'],
+      caution: '「想先自己試」的客人才 1 位，先當參考。' },
+    { id: 'eu6', cal: true, name: '佩珊', when: plusDays(6, 15), label: '銀行行員想轉科技業', type: '要問家人',
+      form: '在銀行做了 10 年，想換到科技業。先生覺得現在的工作很穩定，不太贊成，所以我還要跟他商量。',
+      cares: [{ point: '先生不太贊成', from: '先生覺得現在的工作很穩定，不太贊成' }],
+      watch: ['先問先生最擔心的是什麼', '幫她列家人可能會問的 2 題', '約好她商量完的回覆時間'],
+      caution: '這一類她是第一位，先當參考。' },
+    { id: 'eu8', cal: true, kind: 'current', name: 'Ruby', when: plusDays(2, 19), label: '設計師想接案',
+      watch: ['先問她這兩週報了幾個案子', '上次說好先問客人預算，問她試了沒', '結束前約好下次要看的數字'] },
+    { id: 'eu9', cal: true, kind: 'current', name: '冠宇', when: plusDays(5, 20), label: '工程師轉 PM',
+      watch: ['先問他上週面試的結果', '下個月就到期，這次先提續約', '問他下一個目標是什麼'] },
+    { id: 'eu3', cal: true, name: 'Joy', when: plusDays(9, 11), label: '', type: '', form: '', cares: [], watch: [] },
+    { id: 'eu7', cal: true, name: 'Leo', when: plusDays(12, 14), label: '專案經理想轉顧問', type: '沒時間',
+      form: '做專案經理 6 年，想轉顧問業。平常加班多，一週大概只有週末有空，不確定跟不跟得上。',
+      cares: [{ point: '一週只有週末有空', from: '一週大概只有週末有空，不確定跟不跟得上' }],
+      watch: ['先問他一週能排幾個小時', '講清楚每週最少要留多久', '一起看哪一段可以晚點做'],
+      caution: '這一類他是第一位，先當參考。' }
+  ],
+  clients: [
+    { id: 'ex1', name: '阿哲', date: '2026-11-18', result: '考慮中', type: '怕自己做不到', label: '工程師轉 PM',
+      stage: '後端工程師 7 年，3 月起投了 20 幾份 PM 職缺，2 次面試都沒上',
+      care: '「我完全沒有 PM 的頭銜，真的轉得過去嗎？」',
+      how: '你說先從技術型 PM 進去。費用他要回家討論。',
+      offer: '三個月轉職陪跑', next: '回去跟太太討論，週五前回覆',
+      forces: { push: '投了 20 幾份只有 2 個面試，兩次都停在「有沒有帶過產品」', pull: '轉成 PM，做自己能決定方向的工作', anxiety: '沒有頭銜轉不過去、三個月沒找到、薪水會掉', habit: '上過 8 千多的線上 PM 課，自己投履歷' },
+      improve: { diagnose: '有拿他講的「20 幾份、2 個面試」回去問面試細節，還挖出結帳流程那段，這段做得很好。', offer: '他最怕沒頭銜，有正面回到；「三個月沒找到」那題講了兩個數字，很清楚。', close: '有給週五期限，也請他不管要不要都回覆；太太可能會問的事，可以先幫他列 2 題。' },
+      summary: '阿哲你好，謝謝你今天花時間跟我聊，我把今天聊到的重點整理給你：\n\n1. 你現在的狀況：做後端 7 年，3 月起投了 20 幾份 PM 職缺，有 2 次面試，都停在「有沒有帶過產品」這題。\n2. 我的觀察：你其實有 PM 的經驗，例如結帳流程那次決定先做一個功能，只是還沒寫進履歷和面試的說法裡。\n3. 我的建議：先投技術型 PM、產品工程這類會把工程背景當加分的職缺；把結帳流程那段整理成 2 分鐘的面試故事；投之前先講好你能接受的薪水底線。\n\n我今天介紹的是三個月轉職陪跑，比較適合你是因為你缺的是把經驗翻成 PM 的說法，這需要有人一句一句陪你改。\n\n有任何問題，直接在這裡問我就好。',
+      feedback: '' },
+    { id: 'ex2', name: 'Vicky', date: '2026-11-12', result: '成交', type: '怕自己做不到', label: '行銷轉 UX',
+      stage: '行銷專員 4 年，自學 Figma 半年，作品集只有練習題', care: '「作品集要放什麼，才不會看起來像練習？」',
+      how: '你指出作品集哪裡像練習，說活動頁改版就能當作品。',
+      offer: '三個月轉職陪跑', next: '下週一第一次作品集檢視',
+      forces: { push: '公司明年要縮編行銷部', pull: '明年 6 月前換到 UX 職位', anxiety: '作品集看起來像學生作業', habit: '跟著 YouTube 教學做練習題' },
+      improve: { diagnose: '有拿「縮編」回去問她的時間表，期限講得很清楚。', offer: '她擔心作品集，整段都在回作品集，接得很順。', close: '當場決定，收尾不用多做什麼。' },
+      summary: '', feedback: '你直接講我的作品集哪裡像練習，我才知道差在哪。' },
+    { id: 'ex3', name: '小林', date: '2026-11-06', result: '成交', type: '怕自己做不到', label: '會計轉數據',
+      stage: '會計 6 年，會 Excel 樞紐，SQL 上過一門課', care: '「我 33 歲才轉，會不會太晚？」',
+      how: '你說會計背景是加分，手上的東西就能用。',
+      offer: '三個月轉職陪跑', next: '本週寄第一份履歷給你看',
+      forces: { push: '每年結帳季加班到 11 點', pull: '做看數字找原因的工作', anxiety: '年紀太大、競爭不過本科生', habit: '自己上課拿證照' },
+      improve: { diagnose: '有用她「加班到 11 點」回去算一年花多少時間在重複的工作上。', offer: '她擔心年紀，有回到「會計背景是加分」。', close: '有給期限，她當天就決定。' },
+      summary: '', feedback: '原本以為要從頭學，聽完發現我手上的東西就能用。' },
+    { id: 'ex4', name: 'Grace', date: '2026-10-30', result: '沒成交', type: '想先自己試', label: '業務轉 HR',
+      stage: '業務主管 9 年，帶過 6 人團隊，想轉 HRBP', care: '「我想先用公司裡的人脈，試試看內轉。」',
+      how: '你有給期限，但沒問她打算自己試多久。',
+      offer: '三個月轉職陪跑', next: '她說先自己試試看',
+      improve: { diagnose: '她講到「睡不好」，你沒有接著問影響多大，就直接講方案了。', offer: '她說想先自己試，你講的是陪跑內容，沒有回到她的打算。', close: '有給期限，但沒問她最猶豫的是哪一點。' },
+      summary: '', feedback: '我覺得先試試公司內轉。' },
+    { id: 'ex5', name: '小安', date: '2026-10-24', result: '成交', type: '在意費用', label: '行政想轉人資',
+      stage: '行政 5 年，想轉人資，存款不多', care: '「這個費用可以分期嗎？」',
+      how: '你先講費用和分期，再陪她算拖一年少領多少。',
+      offer: '三個月轉職陪跑', next: '下週開始第一次履歷檢視', summary: '', feedback: '算完才發現拖著不動比較貴。' },
+    { id: 'ex6', name: 'Peter', date: '2026-10-20', result: '沒成交', type: '在意費用', label: '客服想轉業務',
+      stage: '客服 3 年，想轉業務，看過幾個線上課', care: '「這比線上課貴很多欸。」',
+      how: '你直接介紹內容，價錢那題沒回到。',
+      offer: '三個月轉職陪跑', next: '他說再想想', summary: '', feedback: '' },
+    { id: 'ex7', name: 'Ruby', date: '2026-10-15', result: '成交', type: '在意費用', label: '設計師想接案',
+      stage: '平面設計 6 年，想離職接案，收入不穩', care: '「我現在收入不穩，付得起嗎？」',
+      how: '你一開始就講費用，再陪她算多久回本。',
+      offer: '三個月轉職陪跑', next: '月底開始', summary: '', feedback: '你先講錢，我反而比較放心。' },
+    { id: 'ex8', name: '阿凱', date: '2026-10-09', result: '考慮中', type: '怕沒效果', label: '工程師想轉資料',
+      stage: '前端工程師 5 年，上過別家的轉職課', care: '「我上過別的課，最後也沒轉成。」',
+      how: '他問怎麼知道有效，你說「做了就知道」。',
+      offer: '三個月轉職陪跑', next: '他說月底前回覆', summary: '', feedback: '' },
+    { id: 'ex9', name: 'Nina', date: '2026-10-03', result: '沒成交', type: '怕沒效果', label: '老師想轉企業培訓',
+      stage: '國中老師 8 年，想轉企業內訓', care: '「如果三個月後還是沒找到呢？」',
+      how: '你說大部分人都找得到，沒講會看哪些數字。',
+      offer: '三個月轉職陪跑', next: '她說先不用', summary: '', feedback: '' }
+  ],
+  brain: [
+    { id: 'eb1', q: '沒有相關經驗或頭銜，真的轉得過去嗎？', type: '常見問題', force: '焦慮', postable: true,
+      answer: '頭銜不是重點。我帶過的工程師，多半是從技術型 PM 或產品工程這類職缺先進去，這類缺會把工程背景當加分。我們不會一開始就去投最難的那種。',
+      why: '他其實是怕花了錢也轉不過去。我先給他一個比較近的入口，因為先看得到第一步，他才敢往下想。',
+      sessions: [{ cid: 'ex1' }, { cid: 'ex2' }, { cid: 'ex3' }, { cid: 'ex4' }, { cid: 'ex9' }] },
+    { id: 'eb2', q: '你們跟線上課差在哪？', type: '產品問題', force: '習慣', postable: true,
+      answer: '線上課教的是 PM 在做什麼，這個你其實都知道了。你缺的是把你自己的經驗翻成 PM 的說法，這要有人看著你的履歷一句一句改，面試前一起演練。我們每週會看一次你投出去的回覆率，回覆率沒動，我們就改。',
+      why: '', sessions: [{ cid: 'ex1' }, { cid: 'ex6' }, { cid: 'ex8' }, { cid: 'ex9' }] },
+    { id: 'eb3', q: '投了很多份都沒回音，問題出在哪？', type: '方法論', force: '推力', postable: true,
+      answer: '工程師轉 PM，最常掉分的地方是把自己講成配合 PM 的人。面試官要聽的是你自己做過什麼判斷。你有沒有哪一次，是你決定功能要先做哪個、不做哪個？……這個就是你的 PM 經驗，只是你沒有把它講出來。',
+      why: '他已經投很多份了，很挫折。我先拿他自己的專案回給他，因為他講得出來的例子，比我講的道理有用。',
+      sessions: [{ cid: 'ex1' }, { cid: 'ex2' }, { cid: 'ex4' }] },
+    { id: 'eb4', q: '三個月沒找到工作怎麼辦？', type: '猶豫怎麼接', force: '焦慮', postable: true,
+      answer: '三個月我會先跟你約好看兩個數字：投遞的回覆率，跟面試進到第二關的比例。這兩個有在往上，代表方向對，只是時間問題。……我不會讓你一個人自己摸索。',
+      why: '', sessions: [{ cid: 'ex1' }, { cid: 'ex8' }, { cid: 'ex9' }] },
+    { id: 'eb7', q: '費用可以分期嗎？', type: '產品問題', force: '焦慮', postable: false,
+      answer: '可以分期。我會建議你先算一件事：照現在的速度再投一年，中間少領的薪水是多少。算完再決定要不要開始。',
+      why: '', sessions: [{ cid: 'ex5' }, { cid: 'ex7' }, { cid: 'ex6' }] },
+    { id: 'eb5', q: '轉過去薪水會不會掉很多？', type: '常見問題', force: '焦慮', postable: true,
+      answer: '技術型 PM 的起薪通常跟資深工程師差不多，有些會低一點。這個我們可以在投之前先把你能接受的底線講清楚，不符合的缺就不投。',
+      why: '', sessions: [{ cid: 'ex1' }, { cid: 'ex4' }] },
+    { id: 'eb6', q: '作品集要放什麼，才不會像練習題？', type: '方法論', force: '焦慮', postable: true,
+      answer: '練習題的問題是裡面沒有人。你要放的是：你在現在的工作裡，看到誰用起來不順，你怎麼查、怎麼改。你做過的活動頁改版，就可以是第一個作品。',
+      why: '', sessions: [{ cid: 'ex2' }] },
+    { id: 'eb8', q: '年紀這麼大了，還來得及轉嗎？', type: '常見問題', force: '焦慮', postable: true,
+      answer: '我帶過最晚轉的是 45 歲。年紀不是重點，重點是你過去做的事，能不能講成新工作要的經驗。你管過人、管過錢，這些都是別人沒有的。', why: '', sessions: [] },
+    { id: 'eb9', q: '一週要花多少時間？', type: '產品問題', force: '焦慮', postable: true,
+      answer: '一週大概 4 個小時。我會幫你把要做的事縮成兩件，平日做不到，週末一次做完也可以。做不完的那一週，我們就少排一點。', why: '', sessions: [] },
+    { id: 'eb10', q: 'HR 問期望薪資，要先講數字嗎？', type: '方法論', force: '焦慮', postable: true,
+      answer: '先別急著講。你可以先問：「這個職位的預算範圍大概是多少？」對方講了，你再給一個區間。區間最低的那個數字，要是你真的可以接受的。',
+      why: '面試前大家都很怕這題，怕講錯就沒了。我先給他一句可以照著講的話，他就比較不慌。', sessions: [] },
+    { id: 'eb11', q: '面試被問為什麼離職，要怎麼回？', type: '方法論', force: '焦慮', postable: true,
+      answer: '講你想去做的事，不要講前公司哪裡不好。例如「我想做更接近使用者的工作，這是我這兩年一直在準備的」。講完就停，不用多解釋。', why: '', sessions: [] },
+    { id: 'eb12', q: '舊工作的經驗，要怎麼寫進新履歷？', type: '方法論', force: '習慣', postable: true,
+      answer: '先看新工作的職缺要什麼，再從你做過的事裡挑對得上的。用新工作的說法寫，例如「帶新人訓練」寫成「規劃新人訓練，帶過 20 位」。一件事配一個數字。', why: '', sessions: [] },
+    { id: 'eb13', q: '拿到 offer，要怎麼談薪水？', type: '方法論', force: '拉力', postable: true,
+      answer: '先查行情，知道這個職位大概多少。開口的時候先謝謝對方，再問「我很想加入，薪水這部分有沒有調整的空間？」問一次就好，對方說沒有，再看其他條件。', why: '', sessions: [] },
+    { id: 'eb14', q: '同時有兩個 offer，要怎麼選？', type: '常見問題', force: '拉力', postable: true,
+      answer: '先寫下三個月後你想學到什麼，哪一個比較接近就選哪一個。薪水差不多的話，選那個你會一直學到東西的。', why: '', sessions: [] },
+    { id: 'eb15', q: '三個月到了，還要繼續嗎？', type: '猶豫怎麼接', force: '習慣', postable: false,
+      answer: '我們先一起看三個月前後的數字。目標達成了，先停沒關係；還差一點，或是有下一個目標，再續三個月。你決定就好。', why: '', sessions: [] },
+    { id: 'eb16', q: '我可以先自己投投看，再決定嗎？', type: '猶豫怎麼接', force: '習慣', postable: true,
+      answer: '可以。先講好你要試多久，還有怎麼判斷順不順，例如一個月投 20 份，回覆少於 2 封就要調整。到時候我們再聊。', why: '', sessions: [] },
+    { id: 'eb17', q: '客人嫌貴，要不要降價？', type: '方法論', force: '焦慮', postable: true,
+      answer: '先別急著降。先問他預算多少，再看要不要少做一點，或是分兩次做。這次降了，下一個客人就很難回到原價。', why: '', sessions: [] }
+  ],
+  ideas: [
+    { id: 'ei2', brainId: 'eb5',
+      title: '轉職會不會要降薪？投履歷之前，先講好一條線',
+      threads: '轉職諮詢裡，還在考慮的人最常問我：轉過去，薪水會不會掉很多？\n\n以工程師轉技術型 PM 來說，起薪通常跟資深工程師差不多，有些會低一點。\n\n所以投履歷之前，我會先請你把自己能接受的底線講清楚。不符合這條線的職缺，我們就不投。\n\n陪跑的時候，這條底線是我們一起定的。\n\n你也是這樣的話，可以私訊我聊聊你現在的狀況。',
+      ig: ['轉職，薪水會不會掉很多？', '技術型 PM 的起薪，通常跟資深工程師差不多', '有些會低一點，所以要先想好', '投履歷之前，先講好你能接受的底線', '不符合這條線的職缺就不投。想聊聊可以私訊我'],
+      email: { subject: '轉職之前，你有先講好一條薪水底線嗎？', preview: '還在考慮的人，最常問我這一題。',
+        body: '嗨，\n\n這個月的諮詢裡，還在考慮的人最常問我同一題：\n\n「轉過去，薪水會不會掉很多？」\n\n會這樣問很正常，換一條路，沒有人想從頭領起。\n\n以工程師轉技術型 PM 來說，起薪通常跟資深工程師差不多，有些會低一點。\n\n所以投履歷之前，我會先陪你做一件事：\n\n・講好你能接受的薪水底線\n・不符合這條線的職缺，就不投\n\n這條線先講好，後面每個職缺要不要投，就很好決定。\n\n這週可以試一件小事：寫下一個數字，低於它的職缺你就不考慮。\n\n想跟我一起定這條線，可以約我聊聊：',
+        cta: '預約一對一諮詢', ps: 'P.S. 寫好那個數字，可以直接回信跟我說。' },
+      ads: [
+        { angle: '客人的原話', image: '轉職，薪水會掉多少？', headline: '投履歷前，先講好薪水底線', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '「轉過去，薪水會不會掉很多？」\n\n這是轉職諮詢裡，還在考慮的人最常問我的一題。\n\n以工程師轉技術型 PM 來說，起薪通常跟資深工程師差不多，有些會低一點。\n\n所以投履歷之前，我會先陪你講好一條能接受的薪水底線，不符合的職缺就不投。\n\n想聊聊你的狀況，可以私訊我。' },
+        { angle: '我的做法', image: '低於底線的職缺，就不投', headline: '轉職前，先做這一件事', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '投履歷之前，我會先請你做一件事。\n\n講好你能接受的薪水底線，不符合這條線的職缺，我們就不投。\n\n很多人怕轉職要降薪。以工程師轉技術型 PM 來說，起薪通常跟資深工程師差不多，有些會低一點，所以這條線要先講清楚。\n\n想聊聊你的狀況，可以私訊我。' },
+        { angle: '我的看法', image: '薪水底線，投之前就先講好', headline: '降不降薪，投之前先決定', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '轉職要不要降薪，投履歷之前就可以先決定。\n\n我的做法是先講好你能接受的底線，不符合的職缺就不投。\n\n以工程師轉技術型 PM 來說，起薪通常跟資深工程師差不多，有些會低一點。\n\n想聊聊你的狀況，可以私訊我。' }
+      ] },
+    { id: 'ei1', brainId: 'eb3',
+      title: '投了二十份 PM 職缺都沒回音，多半是少講了一種經驗',
+      threads: '這兩個月的轉職諮詢裡，有三個人問我同一題：投了很多份都沒回音，問題到底出在哪？\n\n我看過的履歷，最常掉分的地方，是把自己寫成配合 PM 的人。會跟 PM 討論需求、會配合排程，這些面試官都看過太多次了。\n\n他要聽的是你自己做過什麼判斷。\n\n所以我會先問一題：你有沒有哪一次，是你決定功能要先做哪個、不做哪個？很多工程師都有，例如三個功能裡先做一個，因為另外兩個用的人很少。這就是 PM 的經驗，只是還沒被講出來。\n\n陪跑第一個月，我做的就是把這種判斷一個一個挖出來，改成履歷和面試的故事。\n\n你也是這樣的話，可以私訊我聊聊你現在的狀況。',
+      ig: ['投了二十份 PM 職缺，都沒回音？', '最常掉分的地方：把自己寫成配合 PM 的人', '面試官要聽的是，你自己做過什麼判斷', '你有沒有哪一次，決定功能先做哪個、不做哪個？', '那就是你的 PM 經驗。想聊聊可以私訊我'],
+      email: { subject: '投了很多份都沒回音，你少講了哪一段？', preview: '這兩個月，有三個人問我同一題。',
+        body: '嗨，\n\n這兩個月的諮詢裡，有三個人問我同一題：\n\n「投了很多份都沒回音，問題到底出在哪？」\n\n投了這麼多份都沒消息，真的會很挫折。\n\n我看過的履歷，最常掉分的地方，是把自己寫成配合 PM 的人。面試官要聽的，是你自己做過什麼判斷。\n\n所以我都會先問一題：\n\n・你有沒有哪一次，是你決定功能要先做哪個、不做哪個？\n\n很多工程師都有。那就是你的 PM 經驗，只是還沒被講出來。\n\n這週可以試一件小事：想一次你自己做決定的專案，寫成三句話。\n\n想跟我一起把這段經驗改成履歷和面試的故事，可以約我聊聊：',
+        cta: '預約一對一諮詢', ps: 'P.S. 想到是哪一次了，可以直接回信跟我說。' },
+      ads: [
+        { angle: '客人的原話', image: '投了很多份，都沒回音？', headline: '你可能少講了一種經驗', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '「投了很多份，為什麼都沒回音？」\n\n這兩個月，有三個人問我同一題。\n\n我看過的履歷，最常掉分的地方，是把自己寫成配合 PM 的人。面試官要聽的，是你自己做過什麼判斷。\n\n我會陪你把這些判斷挖出來，改成履歷和面試的故事。\n\n想聊聊你的狀況，可以私訊我。' },
+        { angle: '我的做法', image: '哪一次，是你做的決定？', headline: '把你的判斷寫進履歷', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '工程師想轉 PM，我都會先問一題：\n\n你有沒有哪一次，是你決定功能要先做哪個、不做哪個？\n\n有的話，那就是你的 PM 經驗，只是還沒寫進履歷。\n\n我會陪你把這種判斷一個一個挖出來，改成履歷和面試的故事。\n\n想聊聊你的狀況，可以私訊我。' },
+        { angle: '我的看法', image: '別把自己寫成配合 PM 的人', headline: '面試官想聽你的判斷', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '轉 PM 的履歷，最常在同一個地方掉分。\n\n把自己寫成配合 PM 的人：會討論需求、會配合排程。這些面試官看過太多次了，他要聽的是你自己做過什麼判斷。\n\n你自己講得出來的例子，比任何道理都有用。\n\n想聊聊你的狀況，可以私訊我。' }
+      ] },
+    { id: 'ei3', brainId: 'eb10',
+      title: 'HR 問期望薪資，先別急著講數字',
+      threads: '我的學員最常在面試前問我同一題：HR 問期望薪資，要先講數字嗎？\n\n我的建議是先別急著講。\n\n你可以先問：「這個職位的預算範圍大概是多少？」對方講了，你再給一個區間。\n\n區間裡最低的那個數字，要是你真的可以接受的。這條線先想好，當下就不會慌。\n\n陪跑的時候，每一場面試前我們都會先練這一題。\n\n你也是這樣的話，可以私訊我聊聊你現在的狀況。',
+      ig: ['HR 問期望薪資，要先講數字嗎？', '先別急著講，先問對方的預算範圍', '對方講了，你再給一個區間', '最低的那個數字，要是你真的能接受的', '面試前先練這一題。想聊聊可以私訊我'],
+      email: { subject: 'HR 問期望薪資，你都怎麼回？', preview: '我的學員面試前，最常問我這一題。',
+        body: '嗨，\n\n我的學員在面試前，最常問我同一題：\n\n「HR 問期望薪資，要先講數字嗎？」\n\n這題真的很難，講高怕被刷掉，講低又怕吃虧。\n\n我的建議是先別急著講：\n\n・先問「這個職位的預算範圍大概是多少？」\n・對方講了，再給一個區間\n・區間最低的數字，要是你真的可以接受的\n\n這週可以試一件小事：寫下你能接受的最低數字，下次面試就不會慌。\n\n想跟我一起準備下一場面試，可以約我聊聊：',
+        cta: '預約一對一諮詢', ps: 'P.S. 寫好那個數字，可以直接回信跟我說。' },
+      ads: [
+        { angle: '客人的原話', image: 'HR 問期望薪資，你怎麼回？', headline: '面試前，先練這一題', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '「HR 問期望薪資，要先講數字嗎？」\n\n這是我的學員面試前，最常問我的一題。\n\n我的建議是先別急著講。先問對方這個職位的預算範圍，對方講了，你再給一個區間。\n\n想聊聊你的狀況，可以私訊我。' },
+        { angle: '我的做法', image: '先問範圍，再給區間', headline: '期望薪資，先問再講', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '面試被問期望薪資，我會請學員先問一句話。\n\n「這個職位的預算範圍大概是多少？」\n\n對方講了，再給一個區間。區間最低的數字，要是你真的能接受的。\n\n想聊聊你的狀況，可以私訊我。' },
+        { angle: '我的看法', image: '最低的數字，先想好', headline: '先想好你的底線', desc: '一對一轉職諮詢', cta: '傳送訊息',
+          primary: '期望薪資這一題，難的是當下會慌。\n\n所以面試前，先寫下你能接受的最低數字。這條線想好了，對方怎麼問，你都知道怎麼回。\n\n想聊聊你的狀況，可以私訊我。' }
+      ] }
+  ],
+  insight: {
+    at: 0, n: 9,
+    won_reasons: [
+      { cat: '信任我', reason: '你先回他最在意的事', refs: ['ex2', 'ex3', 'ex7'] },
+      { cat: '價格可以接受', reason: '你陪他算拖下去的代價', refs: ['ex5', 'ex7'] },
+      { cat: '喜歡我的風格', reason: '你講得直接，他聽得懂', refs: ['ex2', 'ex3'] }],
+    lost_reasons: [
+      { cat: '價格考量', reason: '價錢那題沒有回到', refs: ['ex1', 'ex6'] },
+      { cat: '怕沒效果', reason: '沒講會看哪些數字', refs: ['ex8', 'ex9'] },
+      { cat: '想先自己試', reason: '沒問他打算試多久', refs: ['ex4'] },
+      { cat: '要問家人', reason: '家人會問的事沒先講', refs: ['ex1'] }],
+    try_next: '遇到怕沒效果的人，先講「三個月看兩個數字：回覆率、面試進第二關的比例」，再介紹方案。',
+    caution: '才 9 場，先當參考。'
+  },
+  method: {
+    at: 0, n: 9,
+    strong: [{ point: '你會拿客人自己講的數字回給他，像「20 幾份、2 個面試」「加班到 11 點」。', refs: ['ex1', 'ex3'] },
+             { point: '你習慣先給一個比較近的第一步，不直接講最難的目標。', refs: ['ex1', 'ex2', 'ex3'] }],
+    gaps: [{ point: '結束前很少問「你現在最猶豫的是哪一點？」。問了才知道他為什麼還沒決定。', refs: ['ex4', 'ex6'] },
+           { point: '客人說想先自己試的時候，沒有問他打算試多久。', refs: ['ex4'] }],
+    phrases: ['這個就是你的 PM 經驗，只是你沒有把它講出來。', '回覆率沒動，我們就改。'],
+    caution: '才 9 場，先當參考。'
+  }
+};
+
+/* 再多 37 位新客：編號｜日期｜名字｜結果（成、考、沒）｜他最在意的事｜短標籤｜狀況｜他最在意的話｜你怎麼回的｜下一步｜成交或沒成交的大類｜他問過的題目 */
+const EX_NEW = `
+n01|2026-06-03|美玲|成|在意費用|會計轉財務分析|會計 7 年，Excel 很熟，想轉財務分析|「這個價錢，我要存兩個月。」|你先講費用和分期，再陪她算多久回本。|下週開始第一次履歷檢視|信任我,價格可以接受|eb7,eb1
+n02|2026-06-05|柏翰|沒|還在比較別家|工程師想轉 PM|前端工程師 4 年，同時在看兩家轉職課|「另一家便宜一半，差在哪？」|你講了陪跑內容，沒講跟別家差在哪。|他說比較完再說|還在比較別家|eb2
+n03|2026-06-10|雅婷|成|怕自己做不到|行政轉人資|行政 5 年，帶過新人訓練，沒有人資經驗|「我沒念過人資，人家會要我嗎？」|你把她帶新人訓練的經驗，講成人資的說法。|這週寄第一版履歷|信任我,方案剛好符合|eb1,eb12
+n04|2026-06-12|宛儀|沒|沒時間|老師想轉企業培訓|國小老師 9 年，學期還沒結束|「想等暑假再開始想這件事。」|你直接講方案，沒問她暑假後的打算。|她說暑假再聯絡|時機還沒到|eb8
+n05|2026-06-17|詩涵|沒|在意費用|客服想轉行銷|客服 3 年，自己經營過小帳號|「可以只買一個月嗎？」|你說方案只有三個月，沒再往下問。|她說先不用|價格考量|eb7
+n06|2026-06-24|俊傑|成|沒時間|業務轉產品|業務 6 年，下個月公司要調部門|「我只有兩個月，來得及嗎？」|你先講第一個月會做完哪兩件事。|下週一開始|現在就想解決,方案剛好符合|eb4,eb9
+n07|2026-06-26|承恩|沒|想先自己試|設計師想轉 UX|平面設計 5 年，自學 Figma 三個月|「我想先自己做兩個作品看看。」|你有給建議，沒問他打算試多久。|他說先自己試|想先自己試|eb6,eb16
+n08|2026-07-01|志明|成|怕沒效果|工程師轉資料分析|後端工程師 6 年，上過兩次資料分析課|「上過兩次課，還是沒轉成。」|你講三個月會看哪兩個數字。|下週寄履歷給你看|喜歡我的風格,方案剛好符合|eb4,eb2
+n09|2026-07-03|佳穎|沒|要問家人|銀行員想轉科技業|銀行理專 8 年，先生希望她留在銀行|「我先生覺得銀行比較穩。」|你沒問她先生最擔心的是什麼。|她說回家商量|要問家人|eb5
+n10|2026-07-08|子豪|沒|在意費用|店長想轉行銷|餐廳店長 5 年，存款不多|「這比我一個月薪水還多。」|你講了內容，價錢那題沒回到。|他說再想想|價格考量|eb7,eb2
+n11|2026-07-15|怡君|成|怕自己做不到|研究助理轉 UX 研究|研究助理 4 年，做過很多訪談|「我只會做訪談，這樣夠嗎？」|你說訪談經驗就是 UX 研究最需要的。|月底開始|信任我,喜歡我的風格|eb1,eb6
+n12|2026-07-17|欣怡|沒|怕沒效果|護理師想轉醫療業務|護理師 7 年，問過兩家轉職顧問|「如果三個月後還是沒找到呢？」|你說大部分人都找得到，沒講會看哪些數字。|她說先不用|怕沒效果|eb4
+n13|2026-07-22|建宏|成|在意費用|業務想轉採購|業務 9 年，談過很多供應商|「可以分三期付嗎？」|你一開始就講分期，再陪他算時間成本。|下週一開始|價格可以接受|eb7
+n14|2026-07-29|品妤|沒|沒時間|專案助理想轉 PM|專案助理 3 年，常加班到九點|「我一週可能只有五個小時。」|你講了每週要花的時間，沒幫她排。|她說等專案結束再說|時機還沒到|eb9
+n15|2026-08-05|家豪|成|沒時間|主管轉顧問|製造業課長 10 年，週末才有空|「我只有週末，跟得上嗎？」|你先排好一週 4 小時的做法給他看。|下週六開始|方案剛好符合,喜歡我的風格|eb9,eb8
+n16|2026-08-07|明哲|沒|怕自己做不到|工程師想轉業務|韌體工程師 6 年，很怕跟人談錢|「我很不會講話，能做業務嗎？」|你直接介紹方案，沒先給一個近的第一步。|他說再想想|怕自己做不到|eb1
+n17|2026-08-12|思妤|成|在意費用|行銷轉品牌|行銷專員 4 年，公司要縮編|「費用可以晚一點付嗎？」|你陪她算多拖一個月，會少領多少。|月底開始|價格可以接受,現在就想解決|eb7,eb5
+n18|2026-08-14|郁婷|沒|還在比較別家|行政想轉資料分析|行政 6 年，同時問了三家|「你們跟其他課程差在哪？」|你講了很多內容，沒講差在哪。|她說比較完再說|還在比較別家|eb2
+n19|2026-08-19|淑芬|成|怕自己做不到|會計轉 HR|會計 12 年，今年 45 歲|「45 歲了，還來得及嗎？」|你說她管過薪資，這就是 HR 要的經驗。|下週開始|信任我,方案剛好符合|eb8,eb1
+n20|2026-08-21|宗翰|沒|想先自己試|工程師想轉 PM|全端工程師 5 年，自己投了十幾份|「我想再自己投一個月看看。」|你沒問他一個月後怎麼判斷順不順。|他說先自己試|想先自己試|eb16,eb3
+n21|2026-08-28|Tina|成|怕自己做不到|空服員轉行政|空服員 8 年，想要固定的上班時間|「我只會飛，履歷要寫什麼？」|你把她處理客訴的經驗，改成履歷的說法。|下週寄履歷|方案剛好符合,信任我|eb1,eb12
+n22|2026-09-02|凱婷|沒|要問家人|老師想轉教育科技|補習班老師 6 年，爸媽希望她考公職|「我爸媽希望我考公務員。」|你沒先講爸媽可能會問的事。|她說回家商量|要問家人|eb5,eb8
+n23|2026-09-09|威廷|沒|在意費用|房仲想轉行銷|房仲 4 年，收入不穩|「現在收入不穩，付不出來。」|你直接介紹內容，價錢那題沒回到。|他說等收入穩一點|價格考量|eb7
+n24|2026-09-16|冠宇|成|怕沒效果|工程師轉 PM|QA 工程師 5 年，上過 PM 課|「上過 PM 課，還是投不進去。」|你拿他的回覆率，講三個月要看哪兩個數字。|下週開始|喜歡我的風格,方案剛好符合|eb3,eb4
+n25|2026-09-18|雅雯|沒|怕沒效果|行政想轉 UX|行政 4 年，自學過 UX|「我上過一堂 UX 課，沒用啊。」|你說「做了就知道」，沒講會看什麼。|她說先不用|怕沒效果|eb4,eb6
+n26|2026-09-23|Eric|成|沒時間|顧問想轉產品|外商顧問 4 年，年底合約到期|「年底合約就到期了。」|你先排出到年底每週要做的事。|下週開始|現在就想解決|eb9
+n27|2026-09-25|彥廷|沒|還在比較別家|會計想轉資料分析|會計 5 年，問過兩家顧問|「另一家保證面試，你們有嗎？」|你說不保證，但沒講你會看哪些數字。|他說比較完再說|還在比較別家,怕沒效果|eb2,eb4
+n28|2026-09-30|筱涵|沒|在意費用|研究員想轉 UX|研究員 3 年，年底才領年終|「想等領完年終再說。」|你沒問她年終後打算怎麼排。|她說明年再聯絡|時機還沒到|eb5
+n29|2026-10-07|哲瑋|成|在意費用|工程師轉資料|後端工程師 3 年，剛被裁員|「剛被裁員，現在花這個錢對嗎？」|你先講分期，再陪他算多空窗一個月的代價。|下週開始|價格可以接受,現在就想解決|eb7,eb12
+n30|2026-10-14|Wendy|沒|想先自己試|行銷想轉 UX|行銷 3 年，正在上別的線上課|「線上課還沒上完，想先上完。」|你沒問她上完之後要怎麼開始投。|她說上完再說|想先自己試|eb2,eb16
+n31|2026-10-21|Daniel|成|怕自己做不到|業務轉 PM|業務 7 年，沒有技術背景|「沒有技術背景，PM 會要我嗎？」|你說業務最懂客人，這就是 PM 要的。|下週開始|信任我|eb1
+n32|2026-10-28|Iris|考|要問家人|護理師想轉藥廠|護理師 9 年，要跟先生討論|「我要跟先生討論一下。」|你幫她列了先生可能會問的兩題。|下週回覆|要問家人|eb5
+n33|2026-11-03|Sam|沒|在意費用|客服想轉業務|客服 2 年，想先存錢|「等我存夠錢再來。」|你沒問他打算存到什麼時候。|他說存夠再聯絡|價格考量,時機還沒到|eb7
+n34|2026-11-10|Cathy|考|怕沒效果|行政想轉行銷|行政 6 年，上過兩堂行銷課|「上過兩堂課，都沒用上。」|你講了兩個數字，她說要想一想。|週五前回覆|怕沒效果|eb4,eb2
+n35|2026-11-14|Hank|成|沒時間|主管轉顧問|科技業主管 12 年，明年想離職|「我一週只能撥出 4 個小時。」|你先排好一週 4 小時的做法給他看。|下週一開始|方案剛好符合|eb9,eb8
+n36|2026-11-17|Zoe|考|還在比較別家|設計師想轉 UX|平面設計 4 年，在比較兩家|「另一家有團體課，比較便宜。」|你講了一對一差在哪，她說要比較。|下週回覆|還在比較別家|eb2,eb6
+n37|2026-11-20|柏宇|沒|怕自己做不到|老師想轉業務|安親班老師 5 年，很怕被拒絕|「我很怕被拒絕，這樣可以嗎？」|你沒先給他一個近一點的第一步。|他說再想想|怕自己做不到|eb1,eb8
+`;
+/* 成交以後變成現有客戶的 13 位：@名字｜短標籤｜續約（續、考、沒、未＝還沒到期）｜續約或沒續約的大類；下面每一行是聊的一次：編號｜日期｜這次聊什麼｜他問的｜你怎麼回的｜下一步｜他問過的題目 */
+const EX_CUR = `
+@美玲|會計轉財務分析|續|信任我,喜歡我的帶法
+c01|2026-06-10|改第一版履歷|「財報分析的經驗，要放最前面嗎？」|你說放第一段，用數字寫她做過的分析。|下週寄第二版|eb12
+c02|2026-07-08|第一次面試完|「HR 問期望薪資，我不知道怎麼回。」|你教她先問對方的範圍，再講自己的數字。|下週二面|eb10
+c03|2026-08-26|快到期了|「三個月快到了，我還要繼續嗎？」|你先跟她看三個月前後的數字，再聊下一步。|她說續三個月|eb15
+@雅婷|行政轉人資|續|看到成果,信任我
+c04|2026-06-17|改履歷|「帶新人訓練，要寫在哪裡？」|你把它寫成「規劃新人訓練，帶過 20 位」。|這週投 10 份|eb12
+c05|2026-07-15|回覆率很低|「投了 15 份，只回 1 封。」|你看了她投的職缺，請她先投招募專員。|下週再看數字|eb3
+c06|2026-08-12|第一次面試|「面試被問為什麼離職，要怎麼回？」|你請她講想做的事，不講前公司哪裡不好。|週四面試|eb11
+c07|2026-09-09|拿到 offer|「拿到 offer，要怎麼談薪水？」|你陪她查行情，練了一次怎麼開口。|她說續約，下一個目標是升主管|eb13,eb15
+@俊傑|業務轉產品|沒|想先自己做
+c08|2026-07-01|第一次看履歷|「業務數字要寫多少？」|你說挑兩個最有感的數字就好。|下週寄新版|eb12
+c09|2026-08-05|作品集|「我沒有產品作品，要放什麼？」|你請他把一次改流程的經驗，寫成一個案子。|兩週內寫完|eb6
+c10|2026-09-16|三個月到了|「我想先用學到的方法自己投。」|你幫他列了每週要看的兩個數字。|他說先自己投|eb15
+@志明|工程師轉資料分析|沒|目標達成了
+c11|2026-07-08|改履歷|「SQL 只在工作上用過，算數嗎？」|你說算，寫他用 SQL 解決過的問題。|下週投 10 份|eb1,eb12
+c12|2026-08-05|面試準備|「面試被問為什麼離職，要怎麼回？」|你請他講想做的事，陪他練了三次。|下週面試|eb11
+c13|2026-09-02|兩個 offer|「同時有兩個 offer，要怎麼選？」|你請他先寫三個月後想學到什麼，再選。|週五前決定|eb14
+c14|2026-09-30|已經上班|「新工作上手了，還要繼續嗎？」|你說目標達成了，先停沒關係。|他說先不續|eb15
+@怡君|研究助理轉 UX 研究|續|還有下一個目標,看到成果
+c15|2026-07-22|作品集|「作品集要放幾個案子？」|你說兩個就好，一個要有改之前、改之後。|兩週後交|eb6
+c16|2026-08-19|面試|「HR 問期望薪資，要先講數字嗎？」|你教她先問範圍，再給一個區間。|下週面試|eb10
+c17|2026-09-16|拿到 offer|「拿到 offer，要怎麼談薪水？」|你陪她查行情，請她先問有沒有調整空間。|週一回覆對方|eb13
+c18|2026-10-14|上班一個月|「想升資深，要先做什麼？」|你請她先挑一個可以自己帶的專案。|她說續三個月|eb15
+@家豪|主管轉顧問|考|時間不夠
+c19|2026-08-12|整理經歷|「十年的經驗，要怎麼寫成一頁？」|你請他只留跟顧問有關的三件事。|下週寄新版|eb12
+c20|2026-09-09|這週只做一半|「這週只做了一半。」|你幫他把每週要做的事縮成兩件。|下週六再看|eb9
+c21|2026-10-14|第一次面試|「年紀這麼大了，面試官會在意嗎？」|你說他帶團隊的經驗，就是顧問公司要的。|下週二面|eb8,eb11
+c22|2026-11-04|三個月到了|「三個月到了，我還要繼續嗎？」|你講了他前後的差別，沒問他最猶豫哪一點。|他說想一想|eb15
+@思妤|行銷轉品牌|沒|價格考量,時間不夠
+c23|2026-08-19|改履歷|「公司縮編的事，要寫進履歷嗎？」|你說不用寫，面試時再講就好。|這週投 8 份|eb12
+c24|2026-09-16|回覆率|「投了 20 份都沒回音，問題出在哪？」|你看了她的履歷，請她把成果寫在第一行。|下週再看數字|eb3
+c25|2026-10-21|談續約|「續約的費用，可以便宜一點嗎？」|你說價格一樣，沒聊她最在意的是什麼。|她說先不續|eb15,eb7
+@淑芬|會計轉 HR|續|喜歡我的帶法,信任我
+c26|2026-08-26|改履歷|「45 歲了，履歷要寫出生年嗎？」|你說不用寫，經歷挑近十年的就好。|下週寄新版|eb12,eb8
+c27|2026-09-23|面試準備|「面試被問為什麼離職，要怎麼回？」|你請她講想做的事，陪她練了兩次。|週五面試|eb11
+c28|2026-10-21|談薪水|「HR 問期望薪資，要先講數字嗎？」|你教她先問範圍，再給一個區間。|下週回覆|eb10
+c29|2026-11-11|三個月到了|「三個月到了，我還要繼續嗎？」|你先跟她看三個月前後的數字。|她說續三個月|eb15
+@冠宇|工程師轉 PM|未|
+c30|2026-09-23|改履歷|「測試的經驗，PM 會在意嗎？」|你說他找問題的經驗，就是 PM 要的。|這週投 10 份|eb1,eb12
+c31|2026-10-21|回覆率|「投了很多份都沒回音，問題出在哪？」|你請他把自己做過的判斷寫進履歷。|下週再看數字|eb3
+c32|2026-11-18|第一次面試|「面試被問為什麼離職，要怎麼回？」|你請他講想做的事，陪他練了三次。|下週面試|eb11
+@Ruby|設計師想接案|未|
+c33|2026-10-22|作品集|「接案的作品集，要放幾個？」|你說三個就好，每個寫清楚幫客人解決什麼。|下週交作品集|eb6
+c34|2026-11-05|第一次報價|「第一次報價，要報多少？」|你陪她算時薪，再訂一個最低價。|這週報兩個案子|eb17
+c35|2026-11-19|客人嫌貴|「客人說太貴，要降價嗎？」|你請她先問客人預算，再看要不要少做一點。|下次看第三個案子|eb17
+@小安|行政想轉人資|未|
+c36|2026-10-31|改履歷|「行政的工作，要怎麼寫得像人資？」|你把她排班、管請假的事，改成人資的說法。|這週投 8 份|eb1,eb12
+c37|2026-11-14|第一次面試|「面試被問為什麼離職，要怎麼回？」|你請她講想做的事，陪她練了兩次。|下週三面試|eb11
+@小林|會計轉數據|未|
+c38|2026-11-13|改履歷|「會計的經驗，數據分析會在意嗎？」|你說她做過的報表，就是分析的作品。|這週寄新版|eb1,eb12
+c39|2026-11-20|作品集|「作品集要放什麼，才不會像練習？」|你請她用公司的報表，改成一個分析案子。|兩週內交|eb6
+@Vicky|行銷轉 UX|未|
+c40|2026-11-19|第一次看作品集|「活動頁改版，要寫多細？」|你請她寫出改之前、改之後、為什麼改。|下週交第一版|eb6
+`;
+/* 原本 9 位新客的大類 */
+const EX_CATS = { ex1: '要問家人,價格考量', ex2: '信任我,喜歡我的風格', ex3: '信任我,喜歡我的風格', ex4: '想先自己試', ex5: '價格可以接受', ex6: '價格考量', ex7: '價格可以接受,信任我', ex8: '怕沒效果', ex9: '怕沒效果' };
+/* 每個大類底下那一行（這一類最常出現的事） */
+const NEW_SUB = { '信任我': '你先回他最在意的事', '喜歡我的風格': '你講得直接，他聽得懂', '方案剛好符合': '他缺的剛好是有人陪著改', '價格可以接受': '你陪他算拖下去的代價', '現在就想解決': '他有期限，想馬上開始',
+  '價格考量': '價錢那題沒有回到', '怕沒效果': '沒講會看哪些數字', '怕自己做不到': '沒先給一個近的第一步', '時機還沒到': '沒問他打算什麼時候開始', '要問家人': '家人會問的事沒先講', '想先自己試': '沒問他打算試多久', '還在比較別家': '沒講跟別家差在哪' };
+const CUR_SUB = { '看到成果': '每次先一起看數字，看得到進步', '信任我': '每次先回他最想問的那件事', '喜歡我的帶法': '每週只排兩件事，做得完', '還有下一個目標': '做到之後，一起訂下一個目標',
+  '目標達成了': '拿到 offer，三個月剛好夠', '價格考量': '續約的價格沒有先講清楚', '時間不夠': '每週排太多事，做不完', '想先自己做': '想用學到的方法自己來', '看不到進展': '沒有一起看數字，看不出差別' };
+
+/* 新客從哪裡來、介紹了哪一種服務（沒寫的是三個月轉職陪跑）、沒成交的人談到哪一步（沒寫的是約好回覆時間） */
+const EX_SRC = { '朋友介紹': 'n01 n03 n11 n19 ex3 n35 n09 ex1', '電子報': 'n08 n15 n17 ex7 n29 n14 n28 n32 ex9', 'Google 搜尋': 'n06 n13 n26 n05 n18 n22 n27',
+  'Threads': 'ex2 n24 n21 n02 n04 n07 n10 n12 n16 n20 n25 n30 n33 n34 n37', 'IG': 'ex5 n31 ex4 ex6 ex8 n23 n36' };
+const EX_OFFER = { '面試特訓（四堂）': 'ex6 ex8 n02 n16 n25 n27 n33 n34 n35', '履歷健檢（單次）': 'n21 n31 n09 n28', '': 'n07 n20 n30 n37' };
+const EX_REACH = { '沒介紹方案': 'n07 n20 n30 n37', '介紹了方案': 'ex6 n04 n10 n18 n23', '講了價格': 'ex9 n02 n05 n09 n12 n14 n16 n22 n25 n27 n28 n33' };
+
+(function buildDemo() {
+  const R = { '成': '成交', '考': '考慮中', '沒': '沒成交', '續': '成交', '未': '' };
+  const qmap = new Map(EX.brain.map(b => [b.id, b]));
+  const addQs = (cid, qs) => String(qs || '').split(',').map(x => x.trim()).filter(Boolean).forEach(q => { const b = qmap.get(q); if (b) b.sessions.push({ cid }); });
+  const cats = Object.assign({}, EX_CATS);
+  for (const line of EX_NEW.trim().split('\n')) {
+    const [id, date, name, r, type, label, stage, care, how, next, cat, qs] = line.split('|').map(x => x.trim());
+    EX.clients.push({ id, name, date, result: R[r], type, label, stage, care, how, offer: '三個月轉職陪跑', next, summary: '', feedback: '' });
+    cats[id] = cat; addQs(id, qs);
+  }
+  const persons = []; let pr = null;
+  for (const line of EX_CUR.trim().split('\n')) {
+    const f = line.split('|').map(x => x.trim());
+    if (f[0][0] === '@') { pr = { name: f[0].slice(1), label: f[1], result: R[f[2]], cats: (f[3] || '').split(',').filter(Boolean), last: null }; persons.push(pr); continue; }
+    const [id, date, stage, care, how, next, qs] = f;
+    EX.clients.push({ id, kind: 'current', name: pr.name, date, result: pr.result, label: pr.label, stage, care, how, next, summary: '', feedback: '' });
+    pr.last = id; addQs(id, qs);
+  }
+  const setBy = (map, key, init) => {
+    for (const c of EX.clients) if (!c.kind && init !== undefined) c[key] = init;
+    for (const [k, v] of Object.entries(map)) for (const id of v.split(' ')) { const c = EX.clients.find(x => x.id === id); if (c) c[key] = k; }
+  };
+  for (const [id, sr] of [['eu1', 'Threads'], ['eu4', 'IG'], ['eu2', '電子報'], ['eu5', 'Google 搜尋'], ['eu6', '朋友介紹'], ['eu7', 'Threads']]) { const u = EX.upcoming.find(x => x.id === id); if (u) u.src = sr; }
+  setBy(EX_SRC, 'src'); setBy(EX_OFFER, 'offer', '三個月轉職陪跑'); setBy(EX_REACH, 'reach', '約好回覆時間');
+  EX.insight.fixes = { '在意費用': '一開始就講清楚費用和分期，再陪他算拖下去的代價。', '怕自己做不到': '從他做過的事裡找一件對得上的，先給一個近的第一步。',
+    '怕沒效果': '先講三個月會看哪兩個數字，再介紹方案。', '沒時間': '先問他一週能排幾小時，把每週要做的事縮成兩件。',
+    '想先自己試': '先問他打算試多久、怎麼判斷順不順，約好時間再聊。', '要問家人': '先問家人最擔心什麼，幫他列兩題家人會問的。',
+    '還在比較別家': '直接講跟別家差在哪：有人一句一句陪他改。', '其他': '先問他現在最猶豫的是哪一點。' };
+  EX.insight.advice = { bookings: '朋友介紹的成交最多。請成交的學員，各介紹一位朋友來聊。', page: '把「沒經驗轉得過去嗎」放進常見問題第一題，新客最常問。', process: '講完價格，當場約好哪一天回覆。' };
+  /* 原因：一個大類一條，refs 是這一類的人 */
+  const group = (ids, catsOf, sub) => {
+    const m = new Map();
+    for (const id of ids) for (const k of catsOf(id)) { if (!m.has(k)) m.set(k, []); m.get(k).push(id); }
+    return [...m.entries()].map(([cat, refs]) => ({ cat, reason: sub[cat] || '', refs })).sort((a, b) => b.refs.length - a.refs.length);
+  };
+  const nw = EX.clients.filter(c => !c.kind), catsOf = id => String(cats[id] || '').split(',').filter(Boolean);
+  Object.assign(EX.insight, { n: nw.length, caution: '還在考慮的 5 位有結果之後，再分析一次。',
+    won_reasons: group(nw.filter(c => c.result === '成交').map(c => c.id), catsOf, NEW_SUB),
+    lost_reasons: group(nw.filter(c => c.result !== '成交').map(c => c.id), catsOf, NEW_SUB) });
+  /* 準備頁的提醒照新的人數重算：同一類少於 3 位才提醒 */
+  for (const u of EX.upcoming) if (u.type) { const k = nw.filter(c => c.type === u.type).length; u.caution = k < 3 ? '「' + u.type + '」的客人才 ' + k + ' 位，先當參考。' : ''; }
+  const due = persons.filter(x => x.result), pc =id => (persons.find(x => x.last === id) || {}).cats || [];
+  EX.insight_current = { at: 0, n: EX.clients.length - nw.length,
+    won_reasons: group(due.filter(x => x.result === '成交').map(x => x.last), pc, CUR_SUB),
+    lost_reasons: group(due.filter(x => x.result !== '成交').map(x => x.last), pc, CUR_SUB),
+    try_next: '到期前一個月，先跟他一起看三個月前後的數字，再問他下一個目標。',
+    caution: '到期的才 ' + due.length + ' 位，先當參考。' };
+  EX.method_current = { at: 0, n: EX.insight_current.n,
+    strong: [{ point: '你每次開頭都先看他這週的數字，再決定這週改哪裡。', refs: ['c05', 'c24', 'c31'] },
+             { point: '面試前一定陪他練一次，像「為什麼離職」這一題。', refs: ['c06', 'c12', 'c27', 'c37'] }],
+    gaps: [{ point: '續約都在最後一次才聊。到期前一個月就可以先提。', refs: ['c22', 'c25'] },
+           { point: '他說要想一想的時候，沒問他最猶豫的是哪一點。', refs: ['c22'] }],
+    phrases: ['我們先看數字，再決定這週改哪裡。', '講你想去做的事，不要講前公司哪裡不好。'],
+    caution: '' };
+})();
+
+EX.sequence = { at: 0, gap: 2, qids: ['eb1', 'eb12', 'eb3', 'eb4'], emails: [
+  { role: '回答：沒有相關經驗或頭銜，真的轉得過去嗎？', subject: '沒有相關經驗，真的轉得過去嗎？', preview: '這是我最常被問的一題。',
+    body: '嗨，\n\n謝謝你留下 Email。接下來兩個禮拜，我會寄 6 封信給你，每封回答一個想轉職的人最常問我的問題。\n\n今天先回答被問最多的這一題：\n\n「沒有相關經驗，真的轉得過去嗎？」\n\n會這樣擔心很正常，換跑道本來就會怕。\n\n頭銜其實沒有那麼重要。我帶過的人，多半是從「會把原本經驗當加分」的職缺先進去，不會一開始就投最難的那種。\n\n這週可以試一件小事：搜一下你想去的職位，看職缺上有沒有寫「有某某背景尤佳」。那個某某，可能就是你。',
+    cta: '', ps: 'P.S. 下一封：舊工作的經驗，要怎麼寫進新履歷。' },
+  { role: '回答：舊工作的經驗，要怎麼寫進新履歷？', subject: '舊工作的經驗，要怎麼寫進新履歷？', preview: '一件事，配一個數字。',
+    body: '嗨，\n\n「舊工作的經驗，要怎麼寫進新履歷？」\n\n很多人會把舊工作照抄上去，寫完自己看了，都覺得跟新工作沒關係。\n\n我會請你這樣寫：\n\n・先看新職缺要什麼\n・從你做過的事裡，挑對得上的\n・一件事配一個數字，例如「規劃新人訓練，帶過 20 位」\n\n這週可以試一件小事：挑一件你做過的事，用這個寫法改一行。',
+    cta: '', ps: 'P.S. 下一封：投了很多份都沒回音，多半是少寫了這個。' },
+  { role: '回答：投了很多份都沒回音，問題出在哪？', subject: '投了很多份都沒回音？', preview: '你可能少寫了一種經驗。',
+    body: '嗨，\n\n「投了很多份都沒回音，問題出在哪？」\n\n投了這麼多份都沒消息，真的會很挫折。\n\n我看過的履歷，最常掉分的地方，是只寫做了什麼，沒寫自己做過什麼判斷。面試官想知道的，是你會怎麼想。\n\n這週可以試一件小事：想一次你自己做決定的事，用三句話寫下來：當時的狀況、你決定怎麼做、後來怎麼樣。',
+    cta: '', ps: 'P.S. 下一封：如果三個月都沒找到，怎麼辦？' },
+  { role: '回答：三個月沒找到工作怎麼辦？', subject: '三個月都沒找到，怎麼辦？', preview: '開始之前，先約好看兩個數字。',
+    body: '嗨，\n\n「如果三個月都沒找到工作，怎麼辦？」\n\n準備要開始的人，最常擔心這一題。花了時間和錢，怕還是沒結果。\n\n我的做法是，一開始就約好看兩個數字：\n\n・投出去的回覆率\n・面試進到第二關的比例\n\n這兩個有在往上，就代表方向對了，只是時間問題。\n\n這週可以試一件小事：算一下你最近投的履歷，回覆率是多少。',
+    cta: '', ps: 'P.S. 下一封，我會說清楚一對一陪跑怎麼進行。' },
+  { role: '介紹方案', subject: '一對一陪跑，怎麼進行？', preview: '前面幾封的做法，我們一起做。',
+    body: '嗨，\n\n前面幾封講的做法，你可以自己試。如果想有人陪你一起做，這是三個月轉職陪跑會做的事：\n\n・第一個月：把你的經驗挖出來，改成履歷和面試的故事\n・每週：一起看一次回覆率，沒動就改\n・面試前：陪你練最常被問的題目\n\n很多人問我，這跟線上課差在哪。差在有人看著你的履歷一句一句改，面試前陪你練。\n\n想知道你的狀況適不適合，可以先約 45 分鐘聊聊：',
+    cta: '預約一對一諮詢', ps: 'P.S. 最後一封，我想問你一個小問題。' },
+  { role: '收尾', subject: '想跟你確認一件小事', preview: '如果你已經約好了，這封可以跳過。',
+    body: '嗨，\n\n這是這組信的最後一封。\n\n想問你：這兩個禮拜，有沒有哪一封讓你想到自己？\n\n有的話，回信跟我說是哪一封就好，我都會看。\n\n準備好開始的話，這是預約的地方：',
+    cta: '預約一對一諮詢', ps: 'P.S. 之後你還是會收到我平常的信，不會一直推銷。' }
+] };
+
+/* ---------- 狀態 ---------- */
+/* 看示範資料還是自己的資料：null＝自動（自己的資料都是「（範例）」試跑的話就看示範），true／false＝自己選的，記在這台瀏覽器 */
+function loadDemoPref() { try { const v = localStorage.getItem('consult-twin-demo'); return v === '1' ? true : v === '0' ? false : null; } catch (e) { return null; } }
+function saveDemoPref(v) { S.demo = v; try { localStorage.setItem('consult-twin-demo', v ? '1' : '0'); } catch (e) { /* 存不了也沒關係，這次照樣切換 */ } }
+const S = {
+  mode: 'boot', noClaude: false, db: null, uid: null, sample: null, loading: false, connNote: '',
+  ws: { exists: false }, clients: [], brain: [], ideas: [], upcoming: [],
+  view: { name: 'home', id: null }, hist: [], newStage: 'form', addStage: 'form', lastRun: null, fromUp: null, pending: false,
+  openD: {}, matTab: 'threads', adTab: 0, kind: 'new', matKind: 'all', newKind: 'new', demo: loadDemoPref(),
+  seqSel: null, seqGap: 2,
+  ctl: { run: null, prep: null, an: null, mat: null, seq: null }, err: { an: '', mat: '', seq: '' }
+};
+const onlySamples = () => S.clients.every(c => /（範例）/.test(c.name || '')) && S.upcoming.every(u => /（範例）/.test(u.name || ''));
+const hasOwn = () => S.clients.length + S.upcoming.length > 0;
+const isEx = () => S.demo === true || (S.demo !== false && onlySamples());
+const V = () => isEx() ? EX : { upcoming: S.upcoming, clients: S.clients, brain: S.brain, ideas: S.ideas, insight: (S.ws && S.ws.insight) || null, method: (S.ws && S.ws.method) || null, insight_current: (S.ws && S.ws.insight_current) || null, method_current: (S.ws && S.ws.method_current) || null, sequence: (S.ws && S.ws.sequence) || null, fixes: (S.ws && S.ws.fixes) || null };
+const settings = () => (S.ws && S.ws.settings) || {};
+const cw = () => settings().clientWord || '客人';
+const count = b => arr(b.sessions).length;
+const byDate = (a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0);
+const byCount = (a, b) => count(b) - count(a) || (a.createdAt || 0) - (b.createdAt || 0);
+const normType = x => { x = OLD_TYPE[x] || x; return CONCERNS.includes(x) ? x : ''; };
+const typeOf = c => normType(c.type) || arr(c.concerns).map(normType).find(Boolean) || '其他';
+const upType = u => normType(u.type);
+const resKey = c => c && RESULTS.includes(c.result) ? c.result : '';
+const emptyG = () => ({ '成交': [], '考慮中': [], '沒成交': [], '': [] });
+const countsText = g => RES_ROWS.filter(([k]) => g[k].length).map(([k, w]) => w + ' ' + g[k].length + ' 位').join('・');
+/* 新客（沒寫 kind）或現有客戶（kind: 'current'） */
+const kindOf = c => c && c.kind === 'current' ? 'current' : 'new';
+const ofKind = (cs, k) => cs.filter(c => kindOf(c) === k);
+const resRows = k => RES_ROWS.map(r => [r[0], RW[k || 'new'][r[0]], r[2], r[3]]);
+const countsTextK = (g, k) => resRows(k).filter(([key]) => g[key].length).map(([key, w]) => w + ' ' + g[key].length + ' 位').join('・');
+/* 現有客戶：同一個名字是同一位，p.c 是最近一次的紀錄 */
+function people(cs) {
+  const m = new Map();
+  for (const c of [...cs].sort(byDate)) { const k = c.name || c.id; if (!m.has(k)) m.set(k, { c, n: 0 }); m.get(k).n++; }
+  return [...m.values()];
+}
+const sessionsOf = (cs, c) => ofKind(cs, 'current').filter(x => (x.name || x.id) === (c.name || c.id)).sort(byDate);
+
+/* ---------- 存取 ---------- */
+const wsPath = () => 'data/users/' + S.uid + '/ws';
+function memUpsert(coll, id, data, merge) {
+  const list = S[coll]; const i = list.findIndex(x => x.id === id);
+  if (i >= 0) list[i] = merge ? Object.assign({}, list[i], data) : Object.assign({ id }, data);
+  else list.push(Object.assign({ id }, data));
+}
+async function put(coll, id, data) {
+  if (S.mode === 'live') await S.db.doc(wsPath() + '/' + coll + '/' + id).set(data);
+  else memUpsert(coll, id, data, false);
+}
+async function patch(coll, id, data) {
+  if (S.mode === 'live') await S.db.doc(wsPath() + '/' + coll + '/' + id).update(data);
+  else memUpsert(coll, id, data, true);
+}
+async function remove(coll, id) {
+  if (S.mode === 'live') await S.db.doc(wsPath() + '/' + coll + '/' + id).delete();
+  else S[coll] = S[coll].filter(x => x.id !== id);
+}
+async function saveWs(data) {
+  if (S.mode === 'live') {
+    const r = S.db.doc(wsPath());
+    if (S.ws.exists) await r.update(data);
+    else await r.set(Object.assign({ createdAt: Date.now(), settings: {} }, data));
+  } else S.ws = Object.assign({}, S.ws, { exists: true }, data);
+}
+const dbErr = e => '沒有存成功，請再按一次。' + (e && e.code === 'quota_exceeded' ? '（資料太多了，刪掉一些舊的再試）' : '');
+function errCopy(e) {
+  if (e && DB_CODES[e.code]) return dbErr(e);
+  switch (e && e.code) {
+    case 'not_granted': return '分身還沒拿到使用 Claude 的允許。請重新整理網頁，跳出詢問時按「允許」。';
+    case 'sampling_disabled': return '這個帳號目前不能在網頁裡用 Claude。';
+    case 'rate_limited': return 'Claude 今天的用量暫時滿了，過一陣子再試。';
+    case 'prompt_too_large': return '文字太長了，先貼前半場試試看。';
+    case 'refused': return '這份內容沒辦法處理，換一份試試。';
+    case 'session_expired': return '登入過期了，請重新登入 claude.ai 再回來。';
+    default: return '這次沒有成功，請再按一次。';
+  }
+}
+
+/* ---------- 啟動 ---------- */
+async function init() {
+  $('#n-date').value = today();
+  S.view = parseHash();
+  render(true);
+  const c = window.claude;
+  if (!c || typeof c.use !== 'function') { S.noClaude = true; S.mode = 'memory'; render(true); return; }
+  const [db, user, sample] = await Promise.all([c.use('db'), c.use('user'), c.use('sample')]);
+  S.sample = sample;
+  const uid = user ? await user.id() : null;
+  if (db && uid) { S.db = db; S.uid = uid; S.mode = 'live'; subscribe(); }
+  else S.mode = 'memory';
+  render(true);
+}
+function subscribe() {
+  S.loading = true;
+  const loaded = new Set();
+  const timer = setTimeout(() => { if (S.loading) { S.connNote = '你的資料還在讀取，網路可能比較慢。先看示範，讀到之後會自己換過來。'; render(); } }, 10000);
+  const mark = (k, snap) => {
+    if (snap.metadata && snap.metadata.fromCache) return;
+    loaded.add(k);
+    if (loaded.size >= 5 && S.loading) { S.loading = false; S.connNote = ''; clearTimeout(timer); }
+  };
+  const onErr = () => { S.loading = false; clearTimeout(timer); S.connNote = '資料連線斷了，請重新整理網頁。'; render(); };
+  const ws = S.db.doc(wsPath());
+  ws.onSnapshot(snap => { S.ws = snap.exists ? Object.assign({ exists: true }, snap.data()) : { exists: false }; mark('ws', snap); fillMe(); render(); }, onErr);
+  for (const coll of ['clients', 'brain', 'ideas', 'upcoming']) {
+    ws.collection(coll).onSnapshot(snap => { S[coll] = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); mark(coll, snap); render(); }, onErr);
+  }
+}
+
+/* ---------- 換頁：四個分頁，每個分頁點進去最多再一層（客人是兩層） ---------- */
+const PAGES = ['home', 'add', 'new', 'clients', 'analysis', 'materials', 'seq', 'me'];
+const ID_PAGES = ['prep', 'type', 'client', 'question'];
+const NAV_OF = { home: 'home', prep: 'home', add: 'home', new: 'home', clients: 'clients', type: 'clients', client: 'clients', analysis: 'analysis', materials: 'materials', question: 'materials', seq: 'materials' };
+function parseHash() {
+  const h = (location.hash || '').slice(1);
+  const m = /^([a-z]+)-(.+)$/.exec(h);
+  if (m && ID_PAGES.includes(m[1])) return { name: m[1], id: m[2] };
+  return { name: PAGES.includes(h) ? h : 'home', id: null };
+}
+function go(name, id, isBack) {
+  if (!isBack && (S.view.name !== name || S.view.id !== (id || null))) { S.hist.push(S.view); if (S.hist.length > 30) S.hist.shift(); }
+  if (name === 'new' && S.view.name !== 'new' && S.newStage === 'done') S.newStage = 'form';
+  S.view = { name, id: id || null };
+  S.openD = {}; S.matTab = 'threads'; S.adTab = 0;
+  try { const h = id ? name + '-' + id : name; if (location.hash !== '#' + h) location.hash = h; } catch (e) { /* 有些畫面不能改網址，換頁照樣有效 */ }
+  if (name === 'me') fillMe();
+  render(true);
+  window.scrollTo(0, 0);
+}
+function goBack(fallback) {
+  const prev = S.hist.pop();
+  if (prev) go(prev.name, prev.id, true); else go(fallback || 'home', null, true);
+}
+window.addEventListener('hashchange', () => {
+  const v = parseHash();
+  if (v.name !== S.view.name || v.id !== S.view.id) { S.hist.push(S.view); S.view = v; S.openD = {}; render(true); }
+});
+
+/* ---------- 畫面 ---------- */
+const STATIC = { add: '#add-view', new: '#new-view', me: '#me-view' };
+function render(force) {
+  const a = document.activeElement;
+  if (!force && a && a.closest && a.closest('#view') && a.matches('textarea, input, select')) { S.pending = true; return; }
+  S.pending = false;
+  const name = S.view.name;
+  document.querySelectorAll('#nav button').forEach(b => b.setAttribute('aria-current', b.dataset.go === NAV_OF[name] ? 'page' : 'false'));
+  const banner = $('#banner');
+  let bt = '';
+  if (S.connNote) bt = esc(S.connNote);
+  else if (isEx() && !STATIC[name]) bt = '<span class="tag">示範</span>這是虛構的示範資料。' + (hasOwn() ? '<button type="button" class="link sw" data-demo="off">看我自己的資料</button>' : '');
+  else if (S.mode === 'memory' && S.sample) bt = '試用中：關掉網頁之後，這裡的資料就不見了。';
+  else if (!STATIC[name] && hasOwn()) bt = '這是你自己的資料。<button type="button" class="link sw" data-demo="on">看示範資料</button>';
+  banner.hidden = !bt; banner.innerHTML = bt;
+  for (const k in STATIC) $(STATIC[k]).hidden = name !== k;
+  const view = $('#view');
+  view.hidden = !!STATIC[name];
+  if (!view.hidden) view.innerHTML = (PAGE[name] || PAGE.home)();
+  if (name === 'new') renderNew();
+  if (name === 'add') renderAdd();
+}
+document.addEventListener('focusout', () => { if (S.pending) setTimeout(() => render(), 0); });
+document.addEventListener('toggle', e => { const d = e.target; if (d && d.dataset && d.dataset.key) S.openD[d.dataset.key] = d.open; }, true);
+
+const CHEV = '<span class="chev" aria-hidden="true">›</span>';
+const CAL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>';
+const LEGEND = '<p class="legend"><span><i style="background:var(--c-won)"></i>成交了</span><span><i style="background:var(--c-mid)"></i>還在考慮</span><span><i style="background:var(--c-lost)"></i>沒成交</span></p>';
+const backBtn = fb => '<button type="button" class="back" data-back="' + fb + '">‹ 回上一頁</button>';
+/* 大標題換行時，整句一起換（在逗號、問號後面斷），不要把一個詞拆成兩行 */
+const phr = t => esc(t).replace(/[^，、：；？！。]+[，、：；？！。]*/g, m => '<span class="ph">' + m + '</span>');
+const head = (t, s, back) => '<div class="head">' + (back ? backBtn(back) : '') + '<h1>' + phr(t) + '</h1>' + (s ? '<p class="sub num">' + esc(s) + '</p>' : '') + '</div>';
+const stHTML = c => '<span class="st" data-r="' + esc(resKey(c)) + '">' + RW[kindOf(c)][resKey(c)] + '</span>';
+function emptyCard(t, d, btn) { return '<div class="sheet empty"><h2>' + esc(t) + '</h2><p>' + esc(d) + '</p>' + (btn || '') + '</div>'; }
+function workingCard(title, key, sub) { return '<div class="sheet working"><div class="spin" aria-hidden="true"></div><h2>' + esc(title) + '</h2>' + (sub ? '<p class="sub">' + esc(sub) + '</p>' : '') + '<button type="button" class="btn ghost" data-stop="' + key + '">停止</button></div>'; }
+function gateNote() { return isEx() ? '<p class="sub">示範資料不能按這顆。</p>' : (!S.sample ? '<p class="sub">這是示範網站，正式版才能用。</p>' : ''); }
+function det(key, title, body) { return '<details class="sheet" data-key="' + esc(key) + '"' + (S.openD[key] ? ' open' : '') + '><summary>' + esc(title) + '</summary><div class="pad">' + body + '</div></details>'; }
+function clientName(id) { const c = V().clients.find(x => x.id === id); return c ? (c.name || md(c.date)) : ''; }
+function refsText(refs) { const t = arr(refs).map(clientName).filter(Boolean).join('、'); return t ? '<span class="k">（' + esc(t) + '）</span>' : ''; }
+const ptsHTML = (label, list) => arr(list).length ? '<p class="k">' + label + '</p><ul class="pts">' + arr(list).map(x => '<li>' + esc(x.point) + refsText(x.refs) + '</li>').join('') + '</ul>' : '';
+
+function choicesHTML(c, dis) {
+  const k = kindOf(c), cur = resKey(c), opts = k === 'current' ? [...RESULTS, 'none'] : RESULTS;
+  return '<div class="choices" role="group" aria-label="' + (k === 'current' ? '有沒有續約' : '有沒有成交') + '">' + opts.map(r =>
+    '<button type="button" data-result="' + r + '" data-id="' + esc(c.id) + '" aria-pressed="' + (r === 'none' ? cur === '' : cur === r) + '"' + (dis ? ' disabled' : '') + '>' + RW[k][r === 'none' ? '' : r] + '</button>').join('') + '</div>';
+}
+function typeSelect(c, dis) {
+  const t = typeOf(c);
+  return '<select id="ty-' + esc(c.id) + '" data-type-of="' + esc(c.id) + '"' + (dis ? ' disabled' : '') + ' aria-label="他最在意的事">' + CONCERNS.map(k => '<option' + (k === t ? ' selected' : '') + '>' + k + '</option>').join('') + '</select>';
+}
+function askers(b) {
+  const cs = V().clients; const g = emptyG();
+  for (const s of arr(b.sessions)) { const c = cs.find(x => x.id === s.cid); g[resKey(c)].push(c ? (c.name || md(c.date)) : (s.label || '')); }
+  return g;
+}
+/* 一題被誰問過：新客照有沒有成交分，現有客戶只算人數。同一個人問好幾次只算一次 */
+function whoAsked(b) {
+  const cs = V().clients, gNew = emptyG(), cur = [], seen = new Set();
+  for (const s0 of arr(b.sessions)) {
+    const c = cs.find(x => x.id === s0.cid), key = c ? kindOf(c) + ':' + (c.name || c.id) : 'x:' + (s0.label || s0.cid);
+    if (seen.has(key)) continue; seen.add(key);
+    if (c && kindOf(c) === 'current') cur.push(c.name || md(c.date));
+    else gNew[resKey(c)].push(c ? (c.name || md(c.date)) : (s0.label || ''));
+  }
+  return { gNew, cur, nNew: gCount(gNew), nCur: cur.length };
+}
+/* 序列信可以選的題目：被問最多的 8 題；預設勾現在這組用的題目，沒有的話勾前 4 題 */
+function seqList() {
+  const v = V(), list = v.brain.map(b => { const w = whoAsked(b); return { b, n: w.nNew + w.nCur }; }).filter(x => x.n).sort((a, b) => b.n - a.n).slice(0, 8);
+  const sq = v.sequence, def = new Set(sq && arr(sq.qids).length ? sq.qids : list.slice(0, 4).map(x => x.b.id));
+  return { list, def };
+}
+const qSub = w => [w.nNew ? '新客 ' + w.nNew + ' 位' : '', w.nCur ? '現有客戶 ' + w.nCur + ' 位' : ''].filter(Boolean).join('・');
+/* 素材的一題：一個數字（這一邊有幾位問過）＋一條單色長條；新客那邊，還沒買的人問得比較多，多一行金色小字 */
+function mRow(x, max) {
+  return '<button type="button" class="row" data-go="question" data-id="' + esc(x.b.id) + '" aria-label="' + esc(x.b.q + '，' + x.n + ' 位問過' + (x.obj ? '，多半是還沒買的人問的' : '')) + '"><span class="txt">' +
+    '<span class="bar-top"><span class="t">' + esc(x.b.q) + '</span><span class="bar-n">' + x.n + ' 位</span></span>' +
+    '<span class="track"><span class="bar" style="width:' + Math.max(6, Math.round(x.n / Math.max(1, max) * 100)) + '%"><span class="seg" style="flex:1;background:var(--c-ink)"></span></span></span>' +
+    (x.obj ? '<span class="cut">多半是還沒買的人問的</span>' : '') + '</span>' + CHEV + '</button>';
+}
+function typeGroups(cs) {
+  return CONCERNS.map((k, i) => {
+    const g = emptyG(); const list = cs.filter(c => typeOf(c) === k);
+    for (const c of list) g[resKey(c)].push(c.name || md(c.date));
+    return { k, i, g, n: list.length };
+  }).filter(x => x.n).sort((a, b) => b.n - a.n);
+}
+/* 一條橫條：g 是 {成交:[名字], 考慮中:[], 沒成交:[], '':[]} */
+const segsHTML = g => RES_ROWS.map(([k, w, c]) => g[k].length ? '<span class="seg" style="flex:' + g[k].length + ';background:' + c + '" data-tip="' + esc(w + ' ' + g[k].length + ' 位：' + g[k].join('、')) + '"></span>' : '').join('');
+const gCount = g => RES_ROWS.reduce((s, r) => s + g[r[0]].length, 0);
+const gNames = g => RES_ROWS.flatMap(r => g[r[0]]).filter(Boolean).join('、');
+/* 成效的圓餅（中間挖空）。新客：一圈＝全部的場次，中間是成交率。現有客戶：一圈＝每一位，中間是續約率（只算已經到期的） */
+function donutHTML(cs, k) {
+  k = k || 'new';
+  const total = cs.length, C = 2 * Math.PI * 46, parts = resRows(k).map(([key, w, c]) => ({ w, c, n: cs.filter(x => resKey(x) === key).length })).filter(x => x.n);
+  const gap = parts.length > 1 ? 1.6 : 0; let off = 0;
+  const segs = parts.map(x => { const len = Math.max(0.5, C * x.n / total - gap); const h = '<circle class="dseg" cx="60" cy="60" r="46" fill="none" stroke="' + x.c + '" stroke-width="20" stroke-dasharray="' + len.toFixed(2) + ' ' + C.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" data-len="' + len.toFixed(2) + '" data-tip="' + x.w + ' ' + x.n + ' 位" transform="rotate(-90 60 60)"></circle>'; off += C * x.n / total; return h; }).join('');
+  const won = cs.filter(x => x.result === '成交').length, base = k === 'current' ? cs.filter(x => resKey(x)).length : total;
+  const pct = Math.round(won / Math.max(1, base) * 100), rate = k === 'current' ? '續約率' : '成交率';
+  return '<div class="donut"><svg viewBox="0 0 120 120" role="img" aria-label="' + esc(total + (k === 'current' ? ' 位，' : ' 場，') + rate + ' ' + pct + '%。' + parts.map(x => x.w + ' ' + x.n + ' 位').join('、')) + '">' + segs +
+    '<text class="dnum" x="60" y="64" text-anchor="middle" data-n="' + pct + '">' + pct + '%</text><text class="dk" x="60" y="80" text-anchor="middle">' + rate + '</text></svg>' +
+    '<ul class="dleg">' + parts.map(x => '<li><i style="background:' + x.c + '"></i>' + x.w + '<b>' + x.n + ' 位</b></li>').join('') + '</ul></div>';
+}
+/* 每個月一根直條：高度＝談了幾場。新客的顏色＝有沒有成交；現有客戶只有一個顏色（one） */
+function colsHTML(months, one) {
+  const max = Math.max(1, ...months.map(x => x.n));
+  return '<div class="cols">' + months.map(x => '<div class="col" role="img" aria-label="' + esc(x.label + '，' + x.n + ' 場。' + (one ? '' : countsText(x.g))) + '"><span class="n">' + x.n + ' 場</span><span class="stk">' +
+    (one ? '<span style="height:' + Math.round(x.n / max * 104) + 'px;background:var(--c-ink)" data-tip="' + esc(x.label + '・' + x.n + ' 場') + '"></span>'
+      : RES_ROWS.map(([k, w, c]) => x.g[k].length ? '<span style="height:' + Math.round(x.g[k].length / max * 104) + 'px;background:' + c + '" data-tip="' + esc(x.label + '・' + w + ' ' + x.g[k].length + ' 位') + '"></span>' : '').join('')) +
+    '</span><span class="m">' + x.label + '</span></div>').join('') + '</div>';
+}
+/* 最常被問哪一類問題：一類一根直條，高度＝幾位客人問過這一類 */
+function qcolsHTML(qt, k) {
+  const max = Math.max(1, ...qt.map(x => x.n));
+  return '<div class="qcols">' + qt.map(x => '<div class="qcol" role="img" aria-label="' + esc(QTYPE_WORD[x.k] + '，' + x.n + ' 位問過。' + countsTextK(x.g, k)) + '">' +
+    '<span class="n"><b>' + x.n + '</b>位</span>' +
+    '<span class="qbar" style="height:' + Math.round(x.n / max * 124) + 'px" data-tip="' + esc(QTYPE_WORD[x.k] + '（' + x.q + ' 題）：' + countsTextK(x.g, k)) + '"></span>' +
+    '<span class="m">' + esc(QTYPE_WORD[x.k]) + '</span></div>').join('') + '</div>';
+}
+/* 分析頁的一條（不能點）：max 是整條代表幾個，unit 是「位」或「場」，rank 有給就在前面寫第幾名 */
+function chartRow(label, g, max, sub, unit, rank, fill) {
+  const n = gCount(g);
+  return '<div class="crow" role="img" aria-label="' + esc(label + '，' + n + ' ' + unit + '。' + countsText(g)) + '">' +
+    '<span class="bar-top"><span class="t">' + (rank ? '<b class="rk">' + rank + '</b>' : '') + esc(label) + '</span><span class="bar-n">' + n + ' ' + unit + '</span></span>' +
+    '<span class="track"><span class="bar" style="width:' + Math.max(6, Math.round(n / Math.max(1, max) * 100)) + '%">' + (fill ? '<span class="seg" style="flex:1;background:' + fill + '" data-tip="' + esc(gNames(g)) + '"></span>' : segsHTML(g)) + '</span></span>' +
+    (sub ? '<span class="s num">' + esc(sub) + '</span>' : '') + '</div>';
+}
+/* 一個原因用到哪幾位客人 → 一條。resolve 有給的話，先把編號換成那位客人（現有客戶用最近一次的紀錄代表他） */
+function refsG(refs, cs, resolve) {
+  const g = emptyG(), seen = new Set();
+  for (const id of arr(refs)) { const c = resolve ? resolve(id) : cs.find(x => x.id === id); if (c && !seen.has(c.id)) { seen.add(c.id); g[resKey(c)].push(c.name || md(c.date)); } }
+  return g;
+}
+/* 原因先分大類：同一類的併成一條，長度＝這一類有幾位，下面一行是這一類最常出現的事。舊資料沒有大類，就照原本那一句當標題 */
+function reasonsHTML(list, cs, total, fill, cats, resolve) {
+  const m = new Map();
+  for (const x of arr(list)) {
+    const k = x && (x.cat ? (cats.includes(x.cat) ? x.cat : '其他') : x.reason); if (!k) continue;
+    if (!m.has(k)) m.set(k, { t: k, ids: new Set(), subs: [] });
+    const r = m.get(k), ids = [...new Set(arr(x.refs).map(id => resolve ? resolve(id) : cs.find(c => c.id === id)).filter(Boolean).map(c => c.id))];
+    ids.forEach(id => r.ids.add(id));
+    if (x.cat && x.reason) r.subs.push([ids.length, x.reason]);
+  }
+  const rows = [...m.values()].map(r => ({ t: r.t, g: refsG([...r.ids], cs), sub: (r.subs.sort((a, b) => b[0] - a[0])[0] || [])[1] || '' }))
+    .filter(x => gCount(x.g)).sort((a, b) => gCount(b.g) - gCount(a.g)).slice(0, 5);
+  return rows.length ? '<div class="chart">' + rows.map((x, i) => chartRow(x.t, x.g, total, x.sub || gNames(x.g), '位', i + 1, fill)).join('') + '</div>' : '';
+}
+/* 每個月談了幾場（最近 6 個月，舊的在上面） */
+function monthGroups(cs) {
+  const m = new Map();
+  for (const c of cs) { const k = (c.date || '').slice(0, 7); if (!/^\d{4}-\d{2}$/.test(k)) continue; if (!m.has(k)) m.set(k, emptyG()); m.get(k)[resKey(c)].push(c.name || md(c.date)); }
+  return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-6).map(([k, g]) => ({ label: parseInt(k.slice(5), 10) + ' 月', g, n: gCount(g) }));
+}
+/* 客人問的問題分成幾類，每一類有幾位問過（同一位問好幾次只算一次） */
+function qtypeGroups(brain, cs) {
+  return QTYPES.map(k => {
+    const ids = new Set(); let q = 0;
+    for (const b of brain) if ((QTYPES.includes(b.type) ? b.type : '常見問題') === k) { q++; for (const x of arr(b.sessions)) ids.add(x.cid); }
+    const g = emptyG(), seen = new Set();
+    for (const id of ids) { const c = cs.find(x => x.id === id); const key = c && (c.name || c.id); if (c && !seen.has(key)) { seen.add(key); g[resKey(c)].push(c.name || md(c.date)); } }
+    return { k, q, g, n: gCount(g) };
+  }).filter(x => x.n).sort((a, b) => b.n - a.n);
+}
+function barRow(label, g, max, attrs, mark) {
+  const n = RES_ROWS.reduce((s, r) => s + g[r[0]].length, 0);
+  const segs = segsHTML(g);
+  const ct = countsText(g);
+  return '<button type="button" class="row" ' + attrs + ' aria-label="' + esc(label + '，' + n + ' 位。' + ct) + '"><span class="txt">' +
+    '<span class="bar-top"><span class="t">' + esc(label) + '</span><span class="bar-n">' + n + ' 位</span></span>' +
+    '<span class="track"><span class="bar" style="width:' + Math.max(6, Math.round(n / max * 100)) + '%">' + segs + '</span></span>' +
+    '<span class="s num">' + esc(ct) + (mark ? '<span class="made">' + mark + '</span>' : '') + '</span></span>' + CHEV + '</button>';
+}
+/* 客人頁一類一行：左邊類別和成交幾位，右邊大大的人數 */
+function catRow(x) {
+  const w = x.g['成交'].length, o = x.g['考慮中'].length;
+  return '<button type="button" class="row" data-go="type" data-id="' + x.i + '"><span class="txt"><span class="t">' + esc(x.k) + '</span><span class="s num">成交 ' + w + ' 位' + (o ? '・還在考慮 ' + o + ' 位' : '') + '</span></span><span class="big num">' + x.n + '<small>位</small></span>' + CHEV + '</button>';
+}
+/* 每一類怎麼解：你自己改過的優先，沒有就用分析時分身整理的 */
+const fixOf = k => { const v = V(); return ((v.fixes || {})[k]) || (((v.insight || {}).fixes || {})[k]) || ''; };
+/* 客人頁一類一行：長條＝這一類有幾位（不分有沒有成交），下面一句怎麼解 */
+function fixRow(x, max) {
+  const fix = fixOf(x.k);
+  return '<button type="button" class="row" data-go="type" data-id="' + x.i + '" aria-label="' + esc(x.k + '，' + x.n + ' 位' + (fix ? '。怎麼解：' + fix : '')) + '"><span class="txt">' +
+    '<span class="bar-top"><span class="t">' + esc(x.k) + '</span><span class="bar-n">' + x.n + ' 位</span></span>' +
+    '<span class="track"><span class="bar" style="width:' + Math.max(6, Math.round(x.n / max * 100)) + '%"><span class="seg" style="flex:1;background:var(--c-ink)"></span></span></span>' +
+    (fix ? '<span class="cut"><b>怎麼解</b>' + esc(fix) + '</span>' : '') + '</span>' + CHEV + '</button>';
+}
+function clientRow(c) {
+  return '<button type="button" class="row" data-go="client" data-id="' + esc(c.id) + '"><span class="txt"><span class="t">' + esc(c.name || '沒寫名字') + '</span><span class="s">' + esc(md(c.date)) + ' 聊的' + (c.label ? '・' + esc(c.label) : '') + '</span></span>' + CHEV + '</button>';
+}
+/* 現有客戶一位一行：名字、聊了幾次、最近一次，右邊是續約了沒 */
+function personRow(p) {
+  const c = p.c;
+  return '<button type="button" class="row" data-go="type" data-id="p-' + esc(c.id) + '"><span class="txt"><span class="t">' + esc(c.name || '沒寫名字') + '</span>' + (c.label ? '<span class="s">' + esc(c.label) + '</span>' : '') + '<span class="s num">聊了 ' + p.n + ' 次・最近 ' + esc(md(c.date)) + '</span></span>' + stHTML(c) + CHEV + '</button>';
+}
+function sessionRow(c) {
+  return '<button type="button" class="row" data-go="client" data-id="' + esc(c.id) + '"><span class="txt"><span class="t num">' + esc(md(c.date)) + ' 聊的</span><span class="s">' + esc(clip(c.care || c.stage || '', 28)) + '</span></span>' + CHEV + '</button>';
+}
+/* 素材的一題（全部、現有客戶）：一條單色的長條，下面寫誰問過 */
+function qRow(b, w, n, max, mark) {
+  return '<button type="button" class="row" data-go="question" data-id="' + esc(b.id) + '" aria-label="' + esc(b.q + '，' + n + ' 位。' + qSub(w)) + '"><span class="txt">' +
+    '<span class="bar-top"><span class="t">' + esc(b.q) + '</span><span class="bar-n">' + n + ' 位</span></span>' +
+    '<span class="track"><span class="bar" style="width:' + Math.max(6, Math.round(n / max * 100)) + '%"><span class="seg" style="flex:1;background:var(--c-ink)"></span></span></span>' +
+    '<span class="s num">' + esc(qSub(w)) + (mark ? '<span class="made">' + mark + '</span>' : '') + '</span></span>' + CHEV + '</button>';
+}
+/* 頁面最上面的切換（新客／現有客戶；素材多一個「全部」） */
+const kindTabs = (attr, cur, opts) => '<div class="kt" style="grid-template-columns:repeat(' + opts.length + ',minmax(0,1fr))" role="tablist" aria-label="看哪一種">' +
+  opts.map(([k, w]) => '<button type="button" role="tab" ' + attr + '="' + k + '" aria-selected="' + (cur === k) + '">' + esc(w) + '</button>').join('') + '</div>';
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const wonOf = list => list.filter(c => c.result === '成交').length;
+const groupG = list => { const g = emptyG(); for (const c of list) g[resKey(c)].push(c.name || md(c.date)); return g; };
+/* 資料裡最新的 3 個月算「最近三個月」，更早的算「之前」 */
+function periods(cs) {
+  const ms = [...new Set(cs.map(c => (c.date || '').slice(0, 7)).filter(x => /^\d{4}-\d{2}$/.test(x)))].sort();
+  const rs = ms.slice(-3), bs = ms.slice(0, -3), set = new Set(rs);
+  const lab = a => a.length ? (+a[0].slice(5)) + (a.length > 1 ? '–' + (+a[a.length - 1].slice(5)) : '') + ' 月' : '';
+  return { recent: c => set.has((c.date || '').slice(0, 7)), nR: rs.length, nB: bs.length, rLabel: lab(rs), bLabel: lab(bs) };
+}
+const card = (q, ans, body) => '<div class="sheet pad"><h2>' + phr(q) + '</h2>' + (ans ? '<p class="ans">' + phr(ans) + '</p>' : '') + body + '</div>';
+/* 細節的一行：左邊名字、右邊數字，下面一條細長條（金色＝成交率，墨色＝人數） */
+const mrow = (label, val, w, ink) => '<div class="mr"><p class="mt"><span>' + esc(label) + '</span><b>' + esc(val) + '</b></p>' + (w == null ? '' : '<span class="mb' + (ink ? ' ink' : '') + '"><span style="width:' + Math.max(2, w) + '%"></span></span>') + '</div>';
+/* 這幾件事要注意：每一件是「小字問題 → 粗體答案 → 兩個大數字 → 收起來的細節」，不用看圖也看得懂 */
+function findingsHTML(cs) {
+  const out = [], P = periods(cs);
+  if (P.nB) {
+    const rows = CONCERNS.map(k => { const l = cs.filter(c => typeOf(c) === k), r = l.filter(P.recent), b = l.filter(c => !P.recent(c)); return { k, r, b, pr: pct(wonOf(r), r.length), pb: pct(wonOf(b), b.length) }; })
+      .filter(x => x.r.length && x.b.length).sort((a, b) => (a.pr - a.pb) - (b.pr - b.pb));
+    const down = rows.find(x => x.r.length >= 2 && x.b.length >= 2 && x.pr < x.pb);
+    if (rows.length) out.push({ q: '最近三個月，哪一類客人在往下掉？', h: down ? '「' + down.k + '」的客人，成交率往下掉' : '沒有哪一類明顯往下掉',
+      cap: '成交率', st: down ? [[down.pb + '%', P.bLabel + '（' + down.b.length + ' 位）'], [down.pr + '%', P.rLabel + '（' + down.r.length + ' 位）']] : [], arrow: true,
+      more: ['看每一類', rows.map(x => mrow(x.k, x.pb + '% → ' + x.pr + '%'))] });
+  }
+  const offers = [...new Set(cs.map(c => c.offer).filter(Boolean))].map(k => { const l = cs.filter(c => c.offer === k); return { k, n: l.length, w: wonOf(l) }; }).sort((a, b) => b.n - a.n);
+  const low = offers.filter(x => x.n >= 5).sort((a, b) => pct(a.w, a.n) - pct(b.w, b.n))[0];
+  if (offers.length >= 2 && low) {
+    const ref = offers.find(x => x !== low);
+    out.push({ q: '哪一種服務，問的多、成交少？', h: '「' + low.k + '」聊了 ' + low.n + ' 場，只成交 ' + low.w + ' 場',
+      cap: '成交率', st: [[pct(low.w, low.n) + '%', low.k], [pct(ref.w, ref.n) + '%', ref.k]],
+      more: ['看每一種服務', offers.map(x => mrow(x.k, '成交 ' + x.w + '／' + x.n + ' 場', pct(x.w, x.n)))] });
+  }
+  const lost = cs.filter(c => c.result === '沒成交' && REACH.includes(c.reach));
+  if (lost.length >= 2) {
+    const rows = REACH.map((k, i) => ({ k: REACH_LABEL[i], n: lost.filter(c => c.reach === k).length })), top = rows.reduce((a, b) => b.n > a.n ? b : a);
+    out.push({ q: '沒成交的人，停在哪一步？', h: '最多人停在「' + top.k + '」', st: [[top.n + ' 位', '沒成交的 ' + lost.length + ' 位裡']],
+      more: ['看每一步', rows.map((x, i) => mrow((i + 1) + '. ' + x.k, x.n + ' 位', pct(x.n, lost.length), true))] });
+  }
+  const src = SOURCES.map(k => { const l = cs.filter(c => c.src === k); return { k, n: l.length, w: wonOf(l) }; }).filter(x => x.n).sort((a, b) => b.n - a.n);
+  if (src.length >= 2) {
+    const most = src[0], best = src.filter(x => x.n >= 3).sort((a, b) => pct(b.w, b.n) - pct(a.w, a.n))[0], two = best && best !== most;
+    out.push({ q: '約的人從哪裡來？', h: two ? most.k + ' 來的最多，' + best.k + '的最會成交' : most.k + ' 來的最多',
+      cap: '成交率', st: [[pct(most.w, most.n) + '%', most.k + '（' + most.n + ' 位）']].concat(two ? [[pct(best.w, best.n) + '%', best.k + '（' + best.n + ' 位）']] : []),
+      more: ['看每一個來源', src.map(x => mrow(x.k, '成交 ' + x.w + '／' + x.n + ' 位', pct(x.w, x.n)))] });
+  }
+  if (!out.length) return '';
+  return '<div class="sheet pad"><h2>這幾件事要注意</h2><div class="fds">' + out.map((f, i) => '<div class="fd"><p class="fq">' + esc(f.q) + '</p><p class="fh">' + phr(f.h) + '</p>' +
+      (f.st.length && f.cap ? '<p class="fc">' + f.cap + '</p>' : '') + (f.st.length ? '<div class="fs">' + f.st.map(([b, sm]) => '<span><b>' + esc(b) + '</b><small>' + esc(sm) + '</small></span>').join(f.arrow ? '<i aria-hidden="true">→</i>' : '') + '</div>' : '') +
+      '<details class="fm" data-key="fm' + i + '"' + (S.openD['fm' + i] ? ' open' : '') + '><summary>' + f.more[0] + ' ›</summary>' + f.more[1].join('') + '</details></div>').join('') + '</div></div>';
+}
+/* 現有客戶：誰快到期了？從他成交那天算三個月，45 天內到期、還沒談續約的列出來 */
+function dueHTML(ps, all) {
+  const rows = ps.filter(c => !resKey(c)).map(c => {
+    const buy = ofKind(all, 'new').filter(x => x.name === c.name && x.result === '成交').sort(byDate)[0], first = sessionsOf(all, c).slice(-1)[0];
+    const d = new Date(((buy || first || {}).date || '') + 'T00:00:00'); if (isNaN(d)) return null;
+    d.setMonth(d.getMonth() + 3); return { c, d, n: sessionsOf(all, c).length };
+  }).filter(Boolean).sort((a, b) => a.d - b.d);
+  if (!rows.length) return '';
+  const soon = rows.filter(x => (x.d - new Date()) / 86400000 <= 45), dt = d => (d.getMonth() + 1) + '/' + d.getDate();
+  const list = soon.length ? soon : rows.slice(0, 1);
+  return card('誰快到期了？', soon.length ? soon.map(x => x.c.name + ' ' + dt(x.d) + ' 到期').join('、') + '，還沒談續約。' : '45 天內沒有人到期。最近的是 ' + rows[0].c.name + '，' + dt(rows[0].d) + ' 到期。',
+    '<div class="flat">' + list.map(x => '<button type="button" class="row" data-go="type" data-id="p-' + esc(x.c.id) + '"><span class="txt"><span class="t">' + esc(x.c.name) + '</span><span class="s num">大約 ' + dt(x.d) + ' 到期・聊了 ' + x.n + ' 次</span></span>' + CHEV + '</button>').join('') + '</div>');
+}
+/* 以前同一類的客人：不列名字，只看成交率、成交和沒成交的人多半是因為什麼（從分析的大類裡，挑這一類人數最多的那個） */
+function sameTypeHTML(t, same, ins) {
+  if (!same.length) return '<div class="sheet pad"><h2>以前「' + esc(t) + '」的客人</h2><p class="sub">這一類他是第一位。</p></div>';
+  const ids = new Set(same.map(c => c.id)), w = wonOf(same);
+  const top = list => { let best = null; for (const x of arr(list)) { const k = arr(x && x.refs).filter(id => ids.has(id)).length; if (k && (!best || k > best.n)) best = { cat: x.cat || x.reason, reason: x.cat ? x.reason : '', n: k }; } return best; };
+  const line = (who, r) => r ? '<div class="sr"><p class="k">' + who + '</p><p class="h">多半是「' + esc(r.cat) + '」<small>' + r.n + ' 位</small></p>' + (r.reason ? '<p class="sub">' + esc(r.reason) + '</p>' : '') + '</div>' : '';
+  return '<div class="sheet pad"><h2>以前「' + esc(t) + '」的客人</h2>' +
+    '<p class="fc">成交率</p><div class="fs"><span><b>' + pct(w, same.length) + '%</b><small>' + same.length + ' 位裡成交 ' + w + ' 位</small></span></div>' +
+    (ins ? line('成交的人', top(ins.won_reasons)) + line('沒成交的人', top(ins.lost_reasons)) : '') +
+    '<p style="margin-top:14px"><button type="button" class="link" data-go="type" data-id="' + CONCERNS.indexOf(t) + '">看這一類 ›</button></p></div>';
+}
+/* 日期：11/25（二） 14:00，不寫明天、後天 */
+const dayLabel = s => { const d = new Date(s); return isNaN(d) ? '' : (d.getMonth() + 1) + '/' + d.getDate(); };
+/* 這一場在哪一週（週一開始） */
+const weekStart = s => { const d = new Date(s); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; };
+const weekLabel = d => { const e = new Date(d); e.setDate(e.getDate() + 6); return (d.getMonth() + 1) + '/' + d.getDate() + '（一）到 ' + (e.getMonth() + 1) + '/' + e.getDate() + '（日）'; };
+const pastItem = c => '<div><p><b>' + esc(c.name || md(c.date)) + '</b>' + stHTML(c) + '</p>' + (c.how ? '<p>' + esc(c.how) + '</p>' : '') + '</div>';
+function ideaOf(bid) { return V().ideas.filter(i => i.brainId === bid).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0] || null; }
+/* 銷售信：主旨、預覽、內文、一顆按鈕、P.S.。舊的素材只有一段電子報文字，就照舊顯示 */
+const mailOf = i => (i.email && i.email.body ? i.email : null);
+/* 廣告：最多三則，開頭各不一樣。舊的素材只有標題和內文，當成一則 */
+function adsOf(i) {
+  const a = arr(i.ads).filter(x => x && x.primary); if (a.length) return a;
+  const o = i.ad || {}; return o.headline || o.body ? [{ angle: '', primary: o.body || '', headline: o.headline || '', desc: '', image: '', cta: '' }] : [];
+}
+function matText(i, tab) {
+  if (tab === 'ig') return arr(i.ig).map((x, k) => (k + 1) + '. ' + x).join('\n');
+  if (tab === 'newsletter') {
+    const m = mailOf(i); if (!m) return i.newsletter || '';
+    return ['主旨：' + (m.subject || ''), m.preview ? '預覽：' + m.preview : '', '', m.body, m.cta ? '\n［按鈕］' + m.cta : '', m.ps ? '\n' + m.ps : ''].filter((x, k) => x || k === 2).join('\n');
+  }
+  if (tab === 'ad') {
+    const list = adsOf(i), a = list[Math.min(S.adTab, list.length - 1)]; if (!a) return '';
+    return ['主要文字：\n' + a.primary, a.image ? '\n圖上的字：' + a.image : '', a.headline ? '標題：' + a.headline : '', a.desc ? '說明：' + a.desc : '', a.cta ? '按鈕：' + a.cta : ''].filter(Boolean).join('\n');
+  }
+  return i.threads || i.draft || '';
+}
+function mailHTML(m) {
+  return '<div class="mail"><div class="mail-h"><p><span class="mk">主旨</span><b>' + esc(m.subject) + '</b></p>' +
+      (m.preview ? '<p><span class="mk">預覽</span><span>' + esc(m.preview) + '</span></p>' : '') + '</div>' +
+    '<div class="mail-b"><p>' + esc(m.body) + '</p>' + (m.cta ? '<p><span class="mail-btn">' + esc(m.cta) + '</span></p>' : '') + (m.ps ? '<p>' + esc(m.ps) + '</p>' : '') + '</div></div>';
+}
+/* 做成 Facebook、Instagram 動態消息裡看到的樣子：主要文字 → 4:5 的圖（圖上一句話）→ 標題、說明、按鈕 */
+function adHTML(list) {
+  const k = Math.min(S.adTab, list.length - 1), a = list[k];
+  return (list.length > 1 ? '<div class="chips" role="tablist" aria-label="廣告的開頭">' + list.map((x, i) => '<button type="button" role="tab" data-adv="' + i + '" aria-selected="' + (i === k) + '">' + esc(x.angle || '第 ' + (i + 1) + ' 則') + '</button>').join('') + '</div>' : '') +
+    '<div class="ad"><div class="ad-h"><span class="ad-av" aria-hidden="true"></span><span><b>你的粉絲專頁</b><small>贊助</small></span></div>' +
+      '<p class="ad-txt">' + esc(a.primary) + '</p>' +
+      (a.image ? '<div class="ad-img"><span>' + phr(a.image) + '</span></div>' : '') +
+      (a.headline || a.cta ? '<div class="ad-f"><span class="ad-ft"><b>' + esc(a.headline) + '</b>' + (a.desc ? '<small>' + esc(a.desc) + '</small>' : '') + '</span>' + (a.cta ? '<span class="ad-cta">' + esc(a.cta) + '</span>' : '') + '</div>' : '') + '</div>' +
+    (a.image ? '<p class="sub hint">圖片用 4:5，圖上只放這一句。</p>' : '');
+}
+
+const PAGE = {
+  /* 首頁：接下來 7 天要跟誰聊。照 Google 日曆手機版一天一段；新客金色、現有客戶深灰 */
+  home() {
+    const v = V(), ex = isEx();
+    const ups = [...v.upcoming].sort((a, b) => (a.when || '').localeCompare(b.when || '')).filter(u => dayDiff(u.when) <= 6);
+    const a = new Date(), b = new Date(); b.setDate(b.getDate() + 6);
+    const lab = d => (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）';
+    const days = [];
+    for (const u of ups) { const k = (u.when || '').slice(0, 10); let g = days.find(x => x.k === k); if (!g) days.push(g = { k, w: u.when, list: [] }); g.list.push(u); }
+    const ev = u => {
+      const past = dayDiff(u.when) < 0, cur = u.kind === 'current', t = upType(u), c0 = arr(u.cares)[0];
+      const ty = past ? '聊完了，點進來整理' : cur ? '現有客戶・第 ' + (sessionsOf(v.clients, u).length + 1) + ' 次' : (t || (c0 ? clip(c0.point, 14) : '還沒填表單'));
+      const d = new Date(u.when);
+      return '<button type="button" class="cev' + (cur ? ' cur' : '') + '" data-go="prep" data-id="' + esc(u.id) + '"><span class="cb" aria-hidden="true"></span><span class="ct">' +
+        '<span class="tm">' + (isNaN(d) ? '' : pad(d.getHours()) + ':' + pad(d.getMinutes())) + '</span><span class="nm">' + esc(u.name || '沒寫名字') + '</span><span class="ty">' + esc(ty) + '</span></span></button>';
+    };
+    const day = g => { const d = new Date(g.w), today = dayDiff(g.w) === 0; return '<div class="cday"><p class="cdd' + (today ? ' today' : '') + '"><small>' + (today ? '今天' : '週' + WD[d.getDay()]) + '</small><b>' + d.getDate() + '</b></p><div class="cevs">' + g.list.map(ev).join('') + '</div></div>'; };
+    const cal = ex
+      ? '<p class="cal">' + CAL_ICON + 'Google 行事曆<span class="on">已連接</span><span class="tag">示範畫面</span></p>'
+      : '<p class="cal">' + CAL_ICON + 'Google 行事曆這一版還沒接上，先自己加。</p>';
+    return '<div class="head"><h1>接下來的諮詢</h1>' + cal + '</div>' +
+      (!ups.length ? emptyCard('這 7 天沒有排諮詢', '按下面那一行加一場。')
+        : '<section><p class="label num">' + lab(a) + ' 到 ' + lab(b) + '・' + ups.length + ' 場</p>' +
+            '<p class="callegend"><span><i style="background:var(--gold)"></i>新客</span><span><i style="background:var(--c-ink)"></i>現有客戶</span></p>' +
+          '<div class="sheet" style="margin-top:10px">' + days.map(day).join('') + '</div></section>') +
+      '<p><button type="button" class="link" data-go="add">＋ 自己加一場</button></p>' +
+      '<div class="sheet pad"><h2>剛聊完一場？</h2>' +
+        '<button type="button" class="btn big" data-go="new">整理一場聊完的諮詢</button></div>';
+  },
+
+  /* 一場諮詢的準備。新客：他最在意什麼 → 這場先注意 → 同一類的客人以前怎麼談。現有客戶：上次聊到哪 → 這場先注意 */
+  prep() {
+    const v = V(), ex = isEx(); const u = v.upcoming.find(x => x.id === S.view.id);
+    if (!u) return backBtn('home') + emptyCard('找不到這一場', '可能已經整理完或刪掉了。');
+    const watch = arr(u.watch);
+    const watchHTML = watch.length ? '<div class="sheet soft pad"><h2>這場先注意</h2><ol class="watch">' + watch.map(w => '<li>' + esc(w) + '</li>').join('') + '</ol></div>' : '';
+    let body, sub = esc(whenText(u.when)), crit = '';
+    if (u.kind === 'current') {
+      const list = sessionsOf(v.clients, u), last = list[0];
+      sub += '・現有客戶・第 ' + (list.length + 1) + ' 次';
+      body = (last ? '<div class="sheet pad"><p class="k num">上次聊到（' + esc(md(last.date)) + '）</p><p class="care-p">' + esc(last.care || last.stage || '') + '</p>' +
+            (last.how ? '<p class="sub">' + esc(last.how) + '</p>' : '') +
+            (last.next ? '<p class="k" style="margin-top:16px">上次說好</p><p class="care-p">' + esc(last.next) + '</p>' : '') + '</div>'
+          : '<div class="sheet pad"><h2>還沒有他的紀錄</h2><p class="sub">聊完整理一次，下次這裡就會寫上次聊到哪。</p></div>') +
+        watchHTML +
+        (last ? '<p><button type="button" class="link" data-go="type" data-id="p-' + esc(last.id) + '">看他的每一次 ›</button></p>' : '');
+    } else {
+      const t = upType(u), cares = arr(u.cares);
+      const same = t ? ofKind(v.clients, 'new').filter(c => typeOf(c) === t) : [];
+      crit = [t ? '<b>' + esc(t) + '</b>' : '', u.label ? esc(u.label) : '', u.src ? esc(u.src) + ' 來的' : ''].filter(Boolean).join('・');
+      body = (!cares.length && !watch.length
+          ? '<div class="sheet pad"><h2>他還沒填表單</h2><p class="sub">他填了之後，這裡會列出這場要注意的事。</p></div>'
+          : (cares.length ? '<div class="sheet pad"><h2>他最在意的事</h2><ul class="pts">' + cares.map(c => '<li>' + esc(c.point) + '</li>').join('') + '</ul></div>' : '') + watchHTML) +
+        (t ? sameTypeHTML(t, same, v.insight) : '') +
+        (u.form ? det('form', '他填的表單', '<pre class="msgbox">' + esc(u.form) + '</pre>') : '');
+    }
+    return '<div class="head">' + backBtn('home') + '<h1>' + esc(u.name || '沒寫名字') + '</h1><p class="sub num">' + sub + '</p>' + (crit ? '<p class="crit">' + crit + '</p>' : '') + '</div>' +
+      body +
+      '<button type="button" class="btn big" data-act="done-up" data-id="' + esc(u.id) + '">聊完了，整理這一場</button>' +
+      (ex ? '' : '<p><button type="button" class="link danger" data-del="upcoming" data-id="' + esc(u.id) + '" data-label="刪除這一場">刪除這一場</button></p>');
+  },
+
+  /* 客人：只放新客，照「他最在意的事」分類。一類一條長條，下面一句怎麼解（現有客戶問的題目在素材頁） */
+  clients() {
+    const nw = ofKind(V().clients, 'new');
+    if (!nw.length) return head('客人') + emptyCard('還沒有客人', '整理第一場聊完的諮詢之後，客人會出現在這裡。', '<button type="button" class="btn" data-go="new" style="margin-top:14px">整理一場聊完的諮詢</button>');
+    const groups = typeGroups(nw), max = Math.max(1, ...groups.map(x => x.n)), any = groups.some(x => fixOf(x.k));
+    return head('客人', nw.length + ' 位新客，照他最在意的事分類') +
+      '<div class="sheet">' + groups.map(x => fixRow(x, max)).join('') + '</div>' +
+      (any ? '' : '<p class="sub hint">到分析頁按「幫我分析」，每一類會多一句怎麼解。</p>') +
+      '<div class="sheet"><button type="button" class="row" data-go="type" data-id="all"><span class="txt"><span class="t">全部新客</span><span class="s num">' + nw.length + ' 位，照時間排</span></span>' + CHEV + '</button></div>';
+  },
+
+  /* 一類新客：這一類怎麼談才成交 → 名單。id 是 p- 開頭的話，是一位現有客戶的每一次 */
+  type() {
+    const v = V(), id = String(S.view.id || '');
+    if (id.slice(0, 2) === 'p-') {
+      const c0 = v.clients.find(x => x.id === id.slice(2));
+      if (!c0) return backBtn('clients') + emptyCard('找不到這位客人', '可能已經刪掉了。');
+      const list = sessionsOf(v.clients, c0), last = list[0] || c0;
+      return head(c0.name || '沒寫名字', (last.label ? last.label + '・' : '') + '現有客戶・聊了 ' + list.length + ' 次', 'clients') +
+        '<div class="sheet pad"><p class="k">續約了嗎？</p>' + choicesHTML(last, isEx()) + '</div>' +
+        '<section><p class="label">每一次聊的，最新的在上面</p><div class="sheet">' + list.map(sessionRow).join('') + '</div></section>';
+    }
+    const nw = ofKind(v.clients, 'new'), all = id === 'all', k = all ? '' : CONCERNS[+id];
+    if (!all && !k) return backBtn('clients') + emptyCard('找不到這一類', '回上一頁再點一次。');
+    const list = nw.filter(c => all || typeOf(c) === k).sort(byDate);
+    const rows = list.length ? '<section><p class="label">' + (all ? '照時間排，最新的在上面' : '這一類的客人') + '</p><div class="sheet">' + list.map(clientRow).join('') + '</div></section>'
+      : emptyCard('這一類還沒有客人', '整理幾場諮詢之後就會有。');
+    if (all) return head('全部新客', list.length + ' 位', 'clients') + rows;
+    const fix = fixOf(k), ex = isEx();
+    return head('「' + k + '」的客人', list.length + ' 位', 'clients') +
+      '<div class="sheet soft pad"><h2>怎麼解</h2><p style="font-size:18px">' + esc(fix || '還沒有。到分析頁按「幫我分析」，分身會從你成交的那幾次整理一句。') + '</p>' +
+        (ex ? '' : '<details class="fm" data-key="fix"' + (S.openD.fix ? ' open' : '') + '><summary>改成你自己的話 ›</summary>' +
+          '<textarea id="fix-text" rows="2" aria-label="這一類怎麼解">' + esc(fix) + '</textarea>' +
+          '<button type="button" class="btn ghost" style="margin-top:10px" data-act="fix" data-cat="' + esc(k) + '">儲存</button></details>') + '</div>' +
+      rows;
+  },
+
+  /* 一場的紀錄。新客：他在意什麼、有沒有成交；現有客戶：這次聊什麼、是第幾次 */
+  client() {
+    const v = V(), c = v.clients.find(x => x.id === S.view.id);
+    if (!c) return backBtn('clients') + emptyCard('找不到這一場', '可能已經刪掉了。');
+    const ex = isEx(); const f = c.forces || {}, im = c.improve || {};
+    const dt = (k, val) => val ? '<dt>' + k + '</dt><dd>' + esc(val) + '</dd>' : '';
+    const sumHTML = c.summary ? det('sum', '會後傳給他的訊息', '<pre class="msgbox" id="sum-' + esc(c.id) + '">' + esc(c.summary) + '</pre><button type="button" class="btn" data-copy="sum-' + esc(c.id) + '">複製這段訊息</button>') : '';
+    const fbHTML = det('fb', '他後來怎麼說？', '<p class="sub">客人之後傳來的回應貼在這裡。</p>' +
+      '<textarea id="fb-' + esc(c.id) + '" rows="3"' + (ex ? ' disabled' : '') + ' placeholder="例：他說最後決定的原因是……">' + esc(c.feedback || '') + '</textarea>' +
+      (ex ? '' : '<button type="button" class="btn ghost" data-save="clients" data-id="' + esc(c.id) + '" data-field="feedback" data-from="fb-' + esc(c.id) + '">儲存</button>'));
+    const del = label => ex ? '' : '<p><button type="button" class="link danger" data-del="clients" data-id="' + esc(c.id) + '" data-label="' + label + '">' + label + '</button></p>';
+    if (kindOf(c) === 'current') {
+      const list = sessionsOf(v.clients, c), nth = list.length - list.findIndex(x => x.id === c.id);
+      return head(c.name || '沒寫名字', md(c.date) + ' 聊的・第 ' + nth + ' 次' + (c.label ? '・' + c.label : ''), 'clients') +
+        '<div class="sheet pad"><dl class="plain">' + dt('這次聊什麼', c.stage) + dt('他問的', c.care) + dt('你怎麼回的', c.how) + dt('說好的下一步', c.next) + '</dl></div>' +
+        sumHTML + fbHTML +
+        '<p><button type="button" class="link" data-go="type" data-id="p-' + esc((list[0] || c).id) + '">看他的每一次 ›</button></p>' + del('刪除這一次');
+    }
+    const more = dt('為什麼現在來找你', f.push) + dt('他想要變成什麼樣子', f.pull) + dt('他擔心什麼', f.anxiety) + dt('他原本怎麼做', f.habit) + dt('你介紹的方案', c.offer) + dt('從哪裡知道你', c.src) + dt('談到哪一步', c.reach);
+    const tips = dt('了解狀況的時候', im.diagnose) + dt('介紹方案的時候', im.offer) + dt('快結束的時候', im.close);
+    const later = c.result === '成交' ? sessionsOf(v.clients, c) : [];
+    return head(c.name || '沒寫名字', md(c.date) + ' 聊的' + (c.label ? '・' + c.label : ''), 'clients') +
+      '<div class="sheet pad"><dl class="plain">' + dt('他現在的狀況', c.stage) + dt('他最在意的事', c.care) + dt('你怎麼回的', c.how) + dt('說好的下一步', c.next) + '</dl></div>' +
+      (later.length ? '<p><button type="button" class="link" data-go="type" data-id="p-' + esc(later[0].id) + '">他現在是現有客戶，看他的每一次 ›</button></p>' : '') +
+      '<div class="sheet pad"><p class="k">有沒有成交？</p>' + choicesHTML(c, ex) +
+        '<p class="k" style="margin-top:18px"><label for="ty-' + esc(c.id) + '">他是哪一類的客人？</label></p>' + typeSelect(c, ex) + '</div>' +
+      (tips ? det('tips', '這一場，下次可以這樣做', '<dl class="plain">' + tips + '</dl>') : '') +
+      sumHTML +
+      (more ? det('more', '更多：他為什麼來、原本怎麼做', '<dl class="plain">' + more + '</dl>') : '') +
+      fbHTML + del('刪除這位客人');
+  },
+
+  /* 分析：上面切換新客／現有客戶。一張卡回答一個問題，第一行是程式算好的答案，下面是圖 */
+  analysis() {
+    const v = V(), ex = isEx(), all = v.clients, k = S.kind, cur = k === 'current';
+    if (!all.length) return head('分析') + emptyCard('還沒有東西可以分析', '整理 2 場以上的諮詢之後，分身會把每一場放在一起看。');
+    if (S.ctl.an) return head('分析') + workingCard('正在看你的每一場，大約 1 分鐘', 'an');
+    const cs = ofKind(all, k);
+    const tabs = kindTabs('data-kind', k, [['new', '新客 ' + ofKind(all, 'new').length + ' 場'], ['current', '現有客戶 ' + ofKind(all, 'current').length + ' 場']]);
+    if (!cs.length) return head('分析') + tabs + emptyCard(cur ? '還沒有現有客戶的紀錄' : '還沒有新客的紀錄', '整理逐字稿的時候選「' + (cur ? '現有客戶' : '新客諮詢') + '」，就會出現在這裡。');
+    const ins = cur ? v.insight_current : v.insight, m = cur ? v.method_current : v.method;
+    const ps = cur ? people(cs).map(p => p.c) : cs;
+    const resolve = cur ? (id => { const c = cs.find(x => x.id === id); return c ? ps.find(p0 => (p0.name || p0.id) === (c.name || c.id)) || null : null; }) : null;
+    const W = cur
+      ? { a: '續約的情況怎麼樣？', won: '續約的人，多半是因為什麼？', lost: '沒續約的人，多半是因為什麼？', next: '下一次可以試', method: '你的帶法', wc: CUR_WON_CATS, lc: CUR_LOST_CATS, noWon: '還沒有續約的客人。', noLost: '目前沒有沒續約的客人。' }
+      : { a: '這幾個月，約了幾場、成交幾場？', won: '成交的人，多半是因為什麼？', lost: '沒成交的人，多半是因為什麼？', next: '下一場可以試', method: '你的諮詢方法', wc: WON_CATS, lc: LOST_CATS, noWon: '還沒有成交的客人。', noLost: '目前沒有還沒成交的客人。' };
+    const n = r => ps.filter(c => resKey(c) === r).length;
+    const has = ins || m;
+    const won = n('成交'), open = n('考慮中') + n('沒成交'), notDue = cur ? n('') : 0;
+    const months = monthGroups(cs);
+    const wonR = ins ? reasonsHTML(ins.won_reasons, ps, won, 'var(--c-won)', W.wc, resolve) : '', lostR = ins ? reasonsHTML(ins.lost_reasons, ps, open, 'var(--c-ink)', W.lc, resolve) : '';
+    const oldPts = !cur && ins && !wonR && !lostR && (arr(ins.won).length || arr(ins.lost).length);
+    const qt = qtypeGroups(v.brain, cs);
+    const lostOnly = cur ? [] : qt.filter(x => !x.g['成交'].length).map(x => '「' + QTYPE_WORD[x.k] + '」');
+    const mBody = m ? ptsHTML('你做得好的', m.strong) + ptsHTML('常漏掉的一步', m.gaps) +
+      (arr(m.phrases).length ? '<p class="k">你最有力的說法</p><ul class="pts">' + arr(m.phrases).map(p0 => '<li>「' + esc(p0) + '」</li>').join('') + '</ul>' : '') : '';
+    /* 第一張的答案：新客看約的場數有沒有變少；現有客戶看續約率 */
+    const P = periods(cs), rN = cs.filter(P.recent).length;
+    const aAns = cur ? '' : (P.nB ? '最近 ' + P.nR + ' 個月平均每月 ' + Math.round(rN / P.nR) + ' 場，之前每月 ' + Math.round((cs.length - rN) / P.nB) + ' 場。' : '');
+    /* 下一步：新客分成三件事（讓更多人來約、銷售頁、銷售流程）；舊的分析結果只有一句的話照舊 */
+    const adv = !cur && ins && ins.advice ? [['想讓更多人來約', ins.advice.bookings], ['銷售頁可以改', ins.advice.page], ['銷售流程可以改', ins.advice.process]].filter(x => x[1]) : [];
+    const nextCard = adv.length ? '<div class="sheet soft pad"><h2>下一步可以怎麼做？</h2><dl class="plain">' + adv.map(([t, d]) => '<dt>' + t + '</dt><dd>' + esc(d) + '</dd>').join('') + '</dl></div>'
+      : (ins && ins.try_next ? '<div class="sheet soft pad"><h2>' + W.next + '</h2><p style="font-size:18px">' + esc(ins.try_next) + '</p></div>' : '');
+    return head('分析', cur ? ps.length + ' 位現有客戶、' + cs.length + ' 次諮詢放在一起看。' : cs.length + ' 場新客諮詢放在一起看。') + tabs +
+      card(W.a, aAns, donutHTML(ps, k) +
+        (notDue && notDue < ps.length ? '<p class="sub hint">續約率只算已經到期的 ' + (ps.length - notDue) + ' 位。</p>' : '') +
+        (months.length ? '<p class="k" style="margin-top:18px">' + (cur ? '每個月聊幾次' : '每個月') + '</p>' + colsHTML(months, cur) : '')) +
+      (cur ? dueHTML(ps, all) : findingsHTML(cs)) +
+      nextCard +
+      card(W.won, '', wonR ? wonR
+          : oldPts ? ptsHTML('成交的客人', ins.won) + '<p class="sub">按最下面的「重新分析」，這裡會畫成圖。</p>'
+          : '<p class="sub">' + (won ? '還沒分析過，按最下面的按鈕。' : W.noWon) + '</p>') +
+      card(W.lost, '', lostR ? lostR
+          : oldPts ? ptsHTML('還沒成交的客人', ins.lost)
+          : '<p class="sub">' + (open ? '還沒分析過，按最下面的按鈕。' : W.noLost) + '</p>') +
+      (qt.length ? card('最常被問哪一類問題？', '', qcolsHTML(qt, k) +
+          (lostOnly.length ? '<p class="sub hint">' + lostOnly.join('、') + '這一類，問的人都還沒買。</p>' : '')) : '') +
+      (mBody ? det('method-' + k, W.method, mBody) : '') +
+      ((ins && ins.caution) || (m && m.caution) ? '<p class="sub">' + esc((ins && ins.caution) || m.caution) + '</p>' : '') +
+      '<div><button type="button" class="btn' + (has && !ex ? ' ghost' : '') + '" data-act="an"' + (!S.sample || ex ? ' disabled' : '') + '>' + (has ? '用最新的資料重新分析' : '幫我分析') + '</button>' +
+        (S.err.an ? '<p class="msg">' + esc(S.err.an) + '</p>' : '') + gateNote() + '</div>';
+  },
+
+  /* 素材：這一頁只幫你決定「下一篇寫哪一題」。兩張短清單：拿來招生（新客最常問）、拿來教學（現有客戶最常問）；
+     一題只放在問的人比較多的那一邊，一行只有一個數字。做過的收在最下面，不會重複寫 */
+  materials() {
+    const v = V();
+    if (!v.brain.length) return head('素材') + emptyCard('還沒有題目', '整理幾場諮詢之後，客人問過的問題會出現在這裡。');
+    const made = new Set(v.ideas.map(i => i.brainId));
+    const all = v.brain.map(b => ({ b, w: whoAsked(b) })).filter(x => x.w.nNew + x.w.nCur);
+    const todo = all.filter(x => !made.has(x.b.id)), done = all.filter(x => made.has(x.b.id));
+    const sell = todo.filter(x => x.w.nNew >= x.w.nCur).map(x => { const won = x.w.gNew['成交'].length; return { b: x.b, n: x.w.nNew, obj: x.w.nNew - won > won }; }).sort((a, b) => b.n - a.n).slice(0, 5);
+    const teach = todo.filter(x => x.w.nCur > x.w.nNew).map(x => ({ b: x.b, n: x.w.nCur })).sort((a, b) => b.n - a.n).slice(0, 5);
+    const list = (title, sub, rows) => rows.length ? '<section><p class="label">' + title + '</p><div class="sheet">' + rows.map(x => mRow(x, rows[0].n)).join('') + '</div>' + (sub ? '<p class="sub hint">' + sub + '</p>' : '') + '</section>' : '';
+    return head('素材', '挑一題，做成貼文、銷售信、廣告') +
+      '<div class="sheet"><button type="button" class="row" data-go="seq"><span class="txt"><span class="t"><span class="tag gold">加購</span>銷售序列信</span><span class="s">把常被問的題目，串成一組自動寄出的信</span></span>' + CHEV + '</button></div>' +
+      list('拿來招生：新客最常問的', sell.some(x => x.obj) ? '金色那幾題，問的人多半還沒買，最適合寫成銷售信和廣告。' : '', sell) +
+      list('拿來教學：現有客戶最常問的', '', teach) +
+      (done.length ? det('done', '已經做成素材的 ' + done.length + ' 題', '<div class="flat">' + done.map(x => '<button type="button" class="row" data-go="question" data-id="' + esc(x.b.id) + '"><span class="txt"><span class="t">' + esc(x.b.q) + '</span><span class="s">' + esc(qSub(x.w)) + '</span></span>' + CHEV + '</button>').join('') + '</div>') : '');
+  },
+
+  /* 銷售序列信（加購）：把被問最多的題目，串成一組自動寄出的信。一題一封，再加一封介紹方案、一封收尾 */
+  seq() {
+    const v = V(), ex = isEx(), sq = v.sequence, { list, def } = seqList(), sel = S.seqSel || def;
+    const gapWord = g => g === 7 ? '每週一封' : '每 ' + g + ' 天一封';
+    let top;
+    if (S.ctl.seq) top = workingCard('正在寫序列信，大約 1～2 分鐘', 'seq');
+    else if (sq && arr(sq.emails).length) {
+      const when = i => i === 0 ? '當天' : (i * (sq.gap || 2)) + ' 天後';
+      const all = sq.emails.map((e, i) => '【第 ' + (i + 1) + ' 封・' + when(i) + '】\n' + matText({ email: e }, 'newsletter')).join('\n\n');
+      top = '<div class="sheet pad"><h2>這一組：' + sq.emails.length + ' 封，' + gapWord(sq.gap || 2) + '</h2><p class="sub">他留下 Email 之後開始寄，點一封看內容。</p></div>' +
+        '<div class="seq">' + sq.emails.map((e, i) => '<details class="sheet sqi" data-key="sq' + i + '"' + (S.openD['sq' + i] ? ' open' : '') + '><summary><span class="sqd num">' + when(i) + '</span><span class="sqt"><b>' + esc(e.subject) + '</b>' + (e.role && !/^回答：/.test(e.role) ? '<small>' + esc(e.role) + '</small>' : '') + '</span></summary><div class="pad">' + mailHTML(e) + '</div></details>').join('') + '</div>' +
+        '<div class="btns"><button type="button" class="btn" data-copy="seq-all">複製全部 ' + sq.emails.length + ' 封</button></div><pre class="offs" id="seq-all" aria-hidden="true">' + esc(all) + '</pre>';
+    } else top = '<div class="sheet pad"><h2>還沒有序列信</h2><p class="sub">勾幾題被問最多的，分身幫你串成一組。</p></div>';
+    return head('銷售序列信', '把常被問的題目，串成一組自動寄出的信', 'materials') + top +
+      '<div class="sheet pad"><h2>' + (sq ? '重新做一組' : '做一組序列信') + '</h2>' +
+        '<p class="k">用哪幾題？選 2 到 6 題，越上面越多人問</p><div class="checks2">' +
+        list.map(x => '<label class="ck"><input type="checkbox" data-seqq="' + esc(x.b.id) + '"' + (sel.has(x.b.id) ? ' checked' : '') + '><span>' + esc(x.b.q) + '<small>' + x.n + ' 位問過</small></span></label>').join('') + '</div>' +
+        '<p class="k" style="margin-top:18px"><label for="seq-gap">多久寄一封？</label></p><select id="seq-gap" data-seqgap="1">' +
+        [[2, '每 2 天一封'], [3, '每 3 天一封'], [7, '每週一封']].map(([g, w]) => '<option value="' + g + '"' + (S.seqGap === g ? ' selected' : '') + '>' + w + '</option>').join('') + '</select>' +
+        '<p class="sub" style="margin-top:14px">會做成 ' + (sel.size + 2) + ' 封：一題一封，再加一封介紹方案、一封收尾。</p>' +
+        '<button type="button" class="btn" style="margin-top:12px" data-act="seq"' + (!S.sample || ex ? ' disabled' : '') + '>做成序列信</button>' +
+        (S.err.seq ? '<p class="msg">' + esc(S.err.seq) + '</p>' : '') + gateNote() + '</div>';
+  },
+
+  /* 一個問題：你的回答 → 為什麼這樣回答 → 做成素材 */
+  question() {
+    const v = V(), ex = isEx(); const b = v.brain.find(x => x.id === S.view.id);
+    if (!b) return backBtn('materials') + emptyCard('找不到這個問題', '可能已經刪掉了。');
+    const w = whoAsked(b), nq = w.nNew + w.nCur; const idea = ideaOf(b.id);
+    let mat;
+    if (S.ctl.mat) mat = '<div class="working"><div class="spin" aria-hidden="true"></div><p>正在做素材，大約 1 分鐘</p><button type="button" class="btn ghost" data-stop="mat">停止</button></div>';
+    else if (idea) {
+      const txt = matText(idea, S.matTab); const hits = TELLS.filter(([re]) => re.test(txt)).map(([, n]) => n);
+      const mail = S.matTab === 'newsletter' ? mailOf(idea) : null, ads = S.matTab === 'ad' ? adsOf(idea) : [];
+      const rich = mail ? mailHTML(mail) : (ads.length ? adHTML(ads) : '');
+      mat = '<div class="tabs" role="tablist" aria-label="平台">' + MTABS.map(([k, w]) => '<button type="button" role="tab" data-mtab="' + k + '" aria-selected="' + (S.matTab === k) + '">' + w + '</button>').join('') + '</div>' +
+        (rich ? rich + '<pre class="offs" id="mat-out" aria-hidden="true">' + esc(txt) + '</pre>' : '<pre class="msgbox" id="mat-out">' + esc(txt) + '</pre>') +
+        (hits.length ? '<p class="warnline">發之前改一下：裡面有' + esc(hits.join('、')) + '，看起來比較像 AI 寫的。</p>' : '') +
+        '<div class="btns"><button type="button" class="btn" data-copy="mat-out">複製</button>' +
+          (ex ? '' : '<button type="button" class="link" data-act="mat" data-id="' + esc(b.id) + '"' + (!S.sample ? ' disabled' : '') + '>重新做一份</button>') + '</div>';
+    } else {
+      mat = '<p class="sub">一次做成四種：Threads、IG 圖卡、銷售信、廣告。</p>' +
+        '<button type="button" class="btn" data-act="mat" data-id="' + esc(b.id) + '"' + (!S.sample || ex ? ' disabled' : '') + '>把這題做成素材</button>' + gateNote();
+    }
+    return head(b.q, nq + ' 位問過' + (nq ? '：' + qSub(w) : ''), 'materials') +
+      '<div class="sheet pad"><h2>你的回答</h2><blockquote>' + esc(b.answer || '') + '</blockquote></div>' +
+      '<div class="sheet pad"><h2><label for="why-' + esc(b.id) + '">為什麼這樣回答？</label></h2><p class="sub">寫一兩句，做素材時會用到。</p>' +
+        '<textarea id="why-' + esc(b.id) + '" rows="3"' + (ex ? ' disabled' : '') + ' placeholder="例：他其實是怕花了錢沒效果，所以我先講……">' + esc(b.why || '') + '</textarea>' +
+        (ex ? '' : '<button type="button" class="btn ghost" data-save="brain" data-id="' + esc(b.id) + '" data-field="why" data-from="why-' + esc(b.id) + '">儲存</button>') + '</div>' +
+      '<div class="sheet pad"><h2>素材</h2>' + mat + (S.err.mat ? '<p class="msg">' + esc(S.err.mat) + '</p>' : '') + '</div>' +
+      (ex ? '' : '<p><button type="button" class="link danger" data-del="brain" data-id="' + esc(b.id) + '" data-label="刪除這個問題">刪除這個問題</button></p>');
+  }
+};
+
+/* --- 固定表單的畫面切換 --- */
+let elapsedTimer = null;
+function gateText() { return S.sample ? '' : (S.noClaude ? '這是示範網站，分身的按鈕在正式版才能用。' : (S.mode === 'boot' ? '準備中…' : '這個畫面沒辦法使用分身。')); }
+function renderAdd() {
+  $('#add-form').hidden = S.addStage !== 'form';
+  $('#add-working').hidden = S.addStage !== 'working';
+  $('#a-go').disabled = !S.sample;
+  $('#a-gate').textContent = gateText();
+  if (!$('#a-when').value) $('#a-when').value = plusDays(1, 14);
+}
+function renderNew() {
+  const st = S.newStage;
+  $('#new-form').hidden = st !== 'form';
+  $('#new-working').hidden = st !== 'working';
+  $('#new-done').hidden = st !== 'done';
+  $('#n-go').disabled = !S.sample;
+  $('#n-gate').textContent = gateText();
+  document.querySelectorAll('#new-form [data-nkind]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.nkind === S.newKind)));
+  $('#n-kind-hint').hidden = S.newKind !== 'current';
+  $('#n-name-opt').hidden = S.newKind === 'current';
+  if (st === 'done' && S.lastRun) {
+    const r = S.lastRun;
+    const c = S.clients.find(x => x.id === r.client.id) || r.client;
+    const found = '<li>找到 ' + (r.nNew + r.nRep) + ' 個他問的問題' + (r.nRep ? '，其中 ' + r.nRep + ' 個以前也有人問過' : '') + '</li>';
+    const sumLi = c.summary ? '<li>會後要傳給他的訊息寫好了</li>' : '';
+    const cutP = r.cut ? '<p class="sub">這場文字很長，這次只整理了前面 6 萬 5 千字。</p>' : '';
+    const sumSheet = c.summary ? '<div class="sheet pad"><h2>會後傳給他的訊息</h2><pre class="msgbox" id="run-sum">' + esc(c.summary) + '</pre><button type="button" class="btn ghost" data-copy="run-sum">複製這段訊息</button></div>' : '';
+    $('#new-done').innerHTML = kindOf(c) === 'current'
+      ? '<div class="sheet soft pad"><h1>整理好了</h1><ul class="checks"><li>' + (r.nth > 1 ? '接在 ' + esc(c.name) + ' 下面，這是第 ' + r.nth + ' 次' : '新增一位現有客戶：' + esc(c.name || '沒寫名字')) + '</li>' + found + sumLi + '</ul>' + cutP + '</div>' +
+        '<div class="sheet pad"><h2>幫我確認一件事</h2><p class="k">他續約了嗎？還沒到期就選「還沒到期」。</p>' + choicesHTML(c, false) + '</div>' + sumSheet +
+        '<div class="btns"><button type="button" class="btn" data-go="home">回首頁</button><button type="button" class="link" data-go="type" data-id="p-' + esc(c.id) + '">看他的每一次</button></div>'
+      : '<div class="sheet soft pad"><h1>整理好了</h1><ul class="checks"><li>新增一位客人：' + esc(c.name || '沒寫名字') + '</li>' + found + sumLi + '</ul>' + cutP + '</div>' +
+        '<div class="sheet pad"><h2>幫我確認兩件事</h2><p class="k">有沒有成交？分身猜是「' + esc(RESULT_WORD[r.guess] || '還在考慮') + '」</p>' + choicesHTML(c, false) +
+          '<p class="k" style="margin-top:18px"><label for="ty-' + esc(c.id) + '">他是哪一類的客人？</label></p>' + typeSelect(c, false) + '</div>' + sumSheet +
+        '<div class="btns"><button type="button" class="btn" data-go="home">回首頁</button><button type="button" class="link" data-go="client" data-id="' + esc(c.id) + '">看這位客人的完整紀錄</button></div>';
+  }
+}
+
+/* ---------- 我的資料 ---------- */
+function fillMe() {
+  if ($('#me-form').contains(document.activeElement)) return;
+  const s = settings();
+  $('#m-who').value = s.who || ''; $('#m-sells').value = s.sells || ''; $('#m-cw').value = s.clientWord || ''; $('#m-invite').value = s.invite || '';
+}
+$('#me-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const s = { who: $('#m-who').value.trim(), sells: $('#m-sells').value.trim(), clientWord: $('#m-cw').value.trim(), invite: $('#m-invite').value.trim() };
+  try { await saveWs({ settings: s }); $('#m-msg').textContent = '存好了'; }
+  catch (err) { $('#m-msg').textContent = dbErr(err); }
+});
+
+/* ---------- 請 Claude 做事的指令 ---------- */
+const STYLE = '繁體中文、台灣用語、全形標點、白話，像跟朋友說話。用「你」稱呼顧問。不要用破折號，不要用「不是 A，而是 B」的句型，不要用推力、拉力這類術語。';
+const TYPE_RULE = '從這 8 類挑 1 個，照抄：' + CONCERNS.join('、');
+function clientLine(c, i, withName) {
+  const f = c.forces || {}, im = c.improve || {};
+  return '#' + (i + 1) + (withName && c.name ? ' 稱呼：' + c.name + '｜' : ' ') + '結果：' + (c.result || '還不知道') + '｜分類：' + typeOf(c) + '｜短標籤：' + (c.label || '') + '｜從哪裡來：' + (c.src || '') + '｜服務：' + (c.offer || '') + '｜談到哪一步：' + (c.reach || '') + '｜最在意：' + (c.care || '') + '｜我怎麼回的：' + (c.how || '') +
+    '｜為什麼現在來：' + (f.push || '') + '｜想要的樣子：' + (f.pull || '') + '｜擔心：' + (f.anxiety || '') + '｜原本的做法：' + (f.habit || '') +
+    '｜了解狀況時：' + (im.diagnose || '') + '｜介紹方案時：' + (im.offer || '') + '｜快結束時：' + (im.close || '') + '｜後來的回應：' + (c.feedback || '（沒填）');
+}
+
+function prepPrompt(st, name, form, cs) {
+  const w = st.clientWord || '客人';
+  return [
+    '你是一位高單價顧問的助理。顧問接下來要跟一位' + w + '諮詢。下面是這位' + w + '事前填的資料，還有顧問以前的' + w + '紀錄。幫顧問準備這一場。',
+    '只用下面看得到的資料，不要猜' + w + '沒寫的事。' + STYLE,
+    '我的背景：' + (st.who || '（沒填）') + '；我賣的方案：' + (st.sells || '（沒填）'),
+    '',
+    '只回一個 JSON 物件：',
+    '{',
+    '  "type": "他最在意、最猶豫的事屬於哪一類。' + TYPE_RULE + '",',
+    '  "label": "這位' + w + '的短標籤，10 字內，不放名字",',
+    '  "src": "他從哪裡知道我，照抄一個：' + SOURCES.join('、') + '；表單沒寫就寫其他",',
+    '  "cares": [{"point": "他在意的事，一句白話，16 字內", "from": "從他填的哪一句看出來的，照抄原文，40 字內"}],',
+    '  "watch": ["這場先注意的事，18 個字以內，只寫怎麼做（先問什麼、先講什麼）"],',
+    '  "caution": "資料夠不夠當依據，一句話"',
+    '}',
+    '規則：',
+    '- cares 1～2 點，每點都要有 from，第 1 點要對得上 type。他如果問了費用、分期、退費，type 就選「在意費用」。',
+    '- watch 最多 3 點。從同一類成交的那幾次學怎麼做、從沒成交的那幾次學要避開什麼，但只寫做法，不要寫是哪一位、不要解釋原因。',
+    '- 同一類的' + w + '少於 3 位時，caution 寫「同一類的' + w + '才 N 位，先當參考。」；夠多就寫空字串。',
+    '',
+    '這位' + w + '：' + (name || '（沒寫名字）'),
+    '他事前填的資料：',
+    '"""', form, '"""',
+    '',
+    '以前的' + w + '：',
+    cs.length ? cs.map((c, i) => clientLine(c, i, true)).join('\n') : '（還沒有）'
+  ].join('\n');
+}
+
+async function runPrep() {
+  if (!S.sample || S.ctl.prep) return;
+  $('#a-msg').textContent = '';
+  const name = $('#a-name').value.trim(), when = $('#a-when').value, form = $('#a-form').value.trim();
+  if (!name) { $('#a-msg').textContent = '請先寫客人的名字。'; return; }
+  if (!when) { $('#a-msg').textContent = '請選一下什麼時候要聊。'; return; }
+  if (form.length < 15) { $('#a-msg').textContent = '請貼上他事前填的資料，分身才有東西可以看。'; return; }
+  const cs = ofKind(S.clients, 'new').sort(byDate).slice(0, 60);
+  const ctl = new AbortController(); S.ctl.prep = ctl; S.addStage = 'working'; renderAdd();
+  try {
+    const out = await S.sample.json(prepPrompt(settings(), name, form.slice(0, 4000), cs), { signal: ctl.signal });
+    if (!out || typeof out !== 'object' || Array.isArray(out)) throw { code: 'invalid_json' };
+    const id = newId();
+    await put('upcoming', id, {
+      name, when, form: form.slice(0, 4000), label: str(out.label, 14), src: SOURCES.includes(out.src) ? out.src : '', type: normType(str(out.type, 20)),
+      cares: arr(out.cares).slice(0, 2).map(c => ({ point: str(c && c.point, 60), from: str(c && c.from, 80) })).filter(c => c.point),
+      watch: arr(out.watch).slice(0, 3).map(x => str(x, 220)).filter(Boolean),
+      caution: str(out.caution, 120), createdAt: Date.now()
+    });
+    $('#a-name').value = ''; $('#a-form').value = ''; $('#a-when').value = '';
+    S.addStage = 'form'; S.ctl.prep = null; saveDemoPref(false);
+    S.hist.pop();
+    go('prep', id, true);
+    toast('準備好了');
+  } catch (e) {
+    S.addStage = 'form'; S.ctl.prep = null;
+    if (!(e && e.code === 'cancelled')) $('#a-msg').textContent = errCopy(e);
+    if (S.view.name === 'add') renderAdd();
+  }
+}
+
+function sessionPrompt(st, existing, text, name, kind) {
+  const w = st.clientWord || '客人', cur = kind === 'current';
+  const fields = cur ? [
+    '  "label": "這位' + w + '的短標籤，10 字內，不放名字，例：行銷轉UX",',
+    '  "stage": "這次聊了什麼，一句話",',
+    '  "care": "他這次最想問的事，一句話，盡量用他自己的說法",',
+    '  "how": "那件事我當場是怎麼回的。30 個字以內，用「你」稱呼我",',
+    '  "next": "這次說好的下一步，一句話",'
+  ] : [
+    '  "label": "這位' + w + '的短標籤，10 字內，不放名字，例：工程師轉PM",',
+    '  "stage": "他現在的狀況，一句話",',
+    '  "care": "他最在意的事，一句話，盡量用他自己的說法",',
+    '  "type": "他最在意、最猶豫的事屬於哪一類。' + TYPE_RULE + '",',
+    '  "how": "他最在意的那件事，我當場是怎麼回的。30 個字以內，用「你」稱呼我；我沒有回到就寫少做了什麼",',
+    '  "offer": "我介紹了哪個方案；沒介紹就寫空字串",',
+    '  "result": "成交、考慮中、沒成交 三選一；當下沒說定就寫考慮中",',
+    '  "next": "這場說好的下一步，一句話",',
+    '  "src": "他從哪裡知道我，照抄一個：' + SOURCES.join('、') + '；聽不出來就寫其他",',
+    '  "reach": "這場談到哪一步，照抄一個：' + REACH.join('、') + '（約好回覆時間＝約好哪一天回覆，或當場決定）",',
+    '  "forces": {',
+    '    "push": "為什麼現在來找我：他現在已經很困擾的地方，盡量引他講過的數字或原話",',
+    '    "pull": "他想要變成什麼樣子",',
+    '    "anxiety": "他擔心什麼：怕買了沒用、怕做不到的地方",',
+    '    "habit": "他原本怎麼做：放不下的舊方法"',
+    '  },',
+    '  "improve": {',
+    '    "diagnose": "了解狀況的時候：他講的數字、時數、經歷，我有沒有拿來回給他？一句話，做得好就說好在哪",',
+    '    "offer": "介紹方案的時候：他最擔心的那件事，我有正面回到嗎？還是只在講方案內容？一句話",',
+    '    "close": "快結束的時候：期限、他在猶豫的事、請他回覆，三樣有沒有都做到？一句話"',
+    '  },'
+  ];
+  const sum = cur ? [
+    '- summary 照這個格式，300 字內，口語，不寫價格：',
+    (name || '〇〇') + '你好，今天辛苦了，我把這次聊到的整理給你：',
+    '',
+    '1. 這次聊到：（一兩句）',
+    '2. 我的建議：（最多 3 點）',
+    '3. 下次見面前：（說好要做的事）',
+    '',
+    '有任何問題，直接在這裡問我就好。'
+  ] : [
+    '- summary 照這個格式，300 字內，口語，不寫價格，不催報名（沒介紹方案就拿掉那一句）：',
+    (name || '〇〇') + '你好，謝謝你今天花時間跟我聊，我把今天聊到的重點整理給你：',
+    '',
+    '1. 你現在的狀況：（一兩句）',
+    '2. 我的觀察：（為什麼會這樣）',
+    '3. 我的建議：（最多 3 點）',
+    '',
+    '我今天介紹的是（方案名稱），比較適合你是因為（原因）。',
+    '',
+    '有任何問題，直接在這裡問我就好。'
+  ];
+  return [
+    '你是一位高單價顧問的諮詢整理助理。下面是顧問（我）跟一位' + (cur ? '已經付費、正在合作中的' : '') + w + '的諮詢逐字稿。',
+    '逐字稿可能沒有標誰在講話：在解釋方法、介紹方案、給建議的通常是我；在講自己狀況、問問題的通常是' + w + '。只出現一次、聽起來怪的名字或用詞，多半是聽錯，不要照抄。',
+    '我的背景：' + (st.who || '（沒填）'),
+    '我賣的方案：' + (st.sells || '（沒填，照逐字稿判斷）'),
+    '',
+    '只回一個 JSON 物件，欄位如下：',
+    '{'
+  ].concat(fields, [
+    '  "summary": "會後可以直接傳給他的訊息，格式見下面",',
+    '  "brain_new": [{"q": "問題", "type": "方法論", "force": "焦慮", "answer": "我的原話", "postable": true}],',
+    '  "brain_repeat": [{"n": 3}]',
+    '}',
+    '',
+    '規則：',
+    '- 繁體中文、台灣用語、全形標點、白話，像跟朋友說話。不確定就寫「（不確定）」，不要自己補。不要用破折號，不要用「不是 A，而是 B」的句型。',
+    cur ? '- 只寫逐字稿裡看得到的。how 的語氣像同事提醒，不要責備。' : '- forces 和 improve 只寫逐字稿裡看得到的；沒聊到就寫「這場沒聊到」。improve 和 how 的語氣像同事提醒，不要責備。',
+    '- 問題挑的是：他問、我回答的段落，和我主動講的段落（我怎麼判斷他的狀況、怎麼給建議、怎麼接他的猶豫）。寒暄、約時間、傳連結不收。brain_new 加 brain_repeat 一場最多 8 題，挑我回答最完整的。',
+    '- q：用' + w + '會說的白話寫成一句問題。我主動講的段落，寫成這段在回答哪個問題。',
+    '- brain_new 的 type 四選一：方法論（我怎麼判斷、怎麼給建議）／常見問題（' + w + '常問的狀況）／產品問題（價格、上課方式、跟別人差在哪）／猶豫怎麼接（要考慮、太貴、要問另一半、要不要續約）。',
+    '- force 四選一：推力／拉力／焦慮／習慣，看他問這題背後在想什麼。',
+    '- answer：照逐字稿抄我講的話，只刪嗯、啊和重複的字，可以補標點；不改寫、不潤飾。太長就抄最關鍵的部分，中間省略的地方寫「……」，300 字內。人名、公司名、學校名換成「他」「某公司」；電話、Email、帳號那句整句刪掉。',
+    '- postable：拿掉個資後別人也會想看就寫 true；跟價格有關或太個人寫 false。',
+    '- 意思跟下面「已經有的題目」一樣（換個說法也算），就放 brain_repeat，只寫那題的編號 n，不要放進 brain_new。拿不準就當新題目。'
+  ], sum, [
+    '',
+    '已經有的題目：',
+    existing.length ? existing.map((b, i) => '[' + (i + 1) + '] ' + b.q).join('\n') : '（還沒有）',
+    '',
+    '逐字稿：',
+    '\"\"\"',
+    text,
+    '\"\"\"'
+  ]).join('\n');
+}
+
+async function runSession() {
+  if (!S.sample || S.ctl.run) return;
+  $('#n-msg').textContent = '';
+  const kind = S.newKind;
+  const raw = $('#n-text').value.trim();
+  if (raw.length < 200) { $('#n-msg').textContent = '文字太短了。請貼上整場諮詢的逐字稿（至少 200 字）。'; return; }
+  const cut = raw.length > MAXC;
+  const text = cut ? raw.slice(0, MAXC) : raw;
+  const name = $('#n-name').value.trim();
+  if (kind === 'current' && !name) { $('#n-msg').textContent = '現有客戶請寫名字，才會接在同一位客人下面。'; return; }
+  const date = $('#n-date').value || today();
+  const existing = [...S.brain].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).slice(-150);
+  const ctl = new AbortController(); S.ctl.run = ctl;
+  S.newStage = 'working'; renderNew();
+  const t0 = Date.now();
+  elapsedTimer = setInterval(() => { $('#n-elapsed').textContent = '已經過了 ' + Math.round((Date.now() - t0) / 1000) + ' 秒'; }, 1000);
+  try {
+    const out = await S.sample.json(sessionPrompt(settings(), existing, text, name, kind), { signal: ctl.signal });
+    if (!out || typeof out !== 'object' || Array.isArray(out)) throw { code: 'invalid_json' };
+    $('#n-elapsed').textContent = '快好了，正在存起來…';
+    await saveSession(out, { name, date, cut, existing, kind, src: (S.upcoming.find(x => x.id === S.fromUp) || {}).src || '' });
+    if (S.fromUp) { try { await remove('upcoming', S.fromUp); } catch (e2) { /* 沒刪到也沒關係，首頁還看得到，可以手動刪 */ } S.fromUp = null; }
+    $('#n-text').value = ''; $('#n-name').value = ''; $('#n-date').value = today(); updateCount();
+    saveDemoPref(false);
+    S.newStage = 'done';
+  } catch (e) {
+    S.newStage = 'form';
+    if (!(e && e.code === 'cancelled')) $('#n-msg').textContent = errCopy(e);
+  } finally {
+    clearInterval(elapsedTimer); S.ctl.run = null;
+    if (S.view.name === 'new') { renderNew(); window.scrollTo(0, 0); } else render(true);
+  }
+}
+
+/* 存起來。現有客戶：照名字接在同一位下面，續約狀態和短標籤沿用他上一次的 */
+async function saveSession(out, meta) {
+  const cid = newId(), cur = meta.kind === 'current';
+  const before = cur && meta.name ? sessionsOf(S.clients, { name: meta.name }) : [];
+  const prev = before[0] || null;
+  const label = prev && prev.label ? prev.label : str(out.label, 12);
+  const sessLabel = (md(meta.date) + ' ' + (meta.name || label)).trim();
+  let client, guess;
+  if (cur) {
+    guess = prev ? resKey(prev) : '';
+    client = {
+      kind: 'current', name: meta.name, date: meta.date, result: guess, label,
+      stage: str(out.stage, 200), care: str(out.care, 200), how: str(out.how, 260), next: str(out.next, 200),
+      summary: str(out.summary, 900), feedback: '', createdAt: Date.now()
+    };
+  } else {
+    const f = out.forces || {}, im = out.improve || {};
+    guess = RESULTS.includes(out.result) ? out.result : '考慮中';
+    client = {
+      name: meta.name, date: meta.date, result: guess, label, type: normType(str(out.type, 20)) || '其他',
+      stage: str(out.stage, 200), care: str(out.care, 200), how: str(out.how, 260), offer: str(out.offer, 120), next: str(out.next, 200), src: SOURCES.includes(out.src) ? out.src : (meta.src || '其他'), reach: REACH.includes(out.reach) ? out.reach : '',
+      forces: { push: str(f.push, 200), pull: str(f.pull, 200), anxiety: str(f.anxiety, 200), habit: str(f.habit, 200) },
+      improve: { diagnose: str(im.diagnose, 240), offer: str(im.offer, 240), close: str(im.close, 240) },
+      summary: str(out.summary, 900), feedback: '', createdAt: Date.now()
+    };
+  }
+  await put('clients', cid, client);
+  let nNew = 0, nRep = 0; const used = new Set();
+  for (const r of arr(out.brain_repeat)) {
+    const b = meta.existing[(parseInt(r && r.n, 10) || 0) - 1];
+    if (!b || used.has(b.id) || nRep >= 8) continue;
+    used.add(b.id);
+    const cb = S.brain.find(x => x.id === b.id) || b;
+    await patch('brain', b.id, { sessions: [...arr(cb.sessions), { cid, label: sessLabel }] });
+    nRep++;
+  }
+  for (const r of arr(out.brain_new)) {
+    if (nNew + nRep >= 8) break;
+    if (!r || !r.q || !r.answer) continue;
+    await put('brain', newId(), {
+      q: str(r.q, 80), type: QTYPES.includes(r.type) ? r.type : '常見問題', force: FORCE_NAMES.includes(r.force) ? r.force : '',
+      answer: str(r.answer, 600), why: '', sessions: [{ cid, label: sessLabel }], postable: r.postable !== false, createdAt: Date.now()
+    });
+    nNew++;
+  }
+  S.lastRun = { client: Object.assign({ id: cid }, client), guess, nNew, nRep, cut: meta.cut, nth: before.length + 1 };
+}
+
+function matPrompt(st, b, concerns, nSessions) {
+  const w = st.clientWord || '客人'; const who = whoAsked(b), g = who.gNew;
+  return [
+    '你幫一位高單價顧問，把一個' + w + '常問的問題做成四種平台的素材，讓有同樣擔心的' + w + '看出他怎麼判斷、怎麼處理，看完會想找他。',
+    '全部只能用下面「我的回答」和「我為什麼這樣回答」裡有的內容。可以把口語順成文字、刪掉重複，不能加我沒講過的方法、數字、故事、研究。',
+    '我的身分（數字只能用這裡寫的，或下面數得出來的）：' + (st.who || '（沒填，所以不要放年資、人數這類數字）'),
+    '我賣的方案：' + (st.sells || '（沒填）'),
+    '固定的邀請句：' + (st.invite || '你也是這樣的話，可以私訊我聊聊你現在的狀況。'),
+    '',
+    '這個問題：' + b.q,
+    '問過的人：新客 ' + who.nNew + ' 位（成交的 ' + g['成交'].length + ' 位、還沒買的 ' + (g['考慮中'].length + g['沒成交'].length) + ' 位），現有' + w + ' ' + who.nCur + ' 位。我一共做了 ' + nSessions + ' 場諮詢。',
+    '我的回答：' + b.answer,
+    '我為什麼這樣回答：' + (b.why || '（還沒寫）'),
+    w + '講過的相關擔心：' + (concerns.length ? concerns.join('；') : '（沒有）'),
+    '',
+    '只回一個 JSON 物件：',
+    '{',
+    '  "title": "一句可以當標題的話，點出' + w + '的擔心",',
+    '  "threads": "150～400 字。先點破' + w + '的擔心，再寫我怎麼看、我怎麼做，最後一句接到方案（要跟這題有關），再接固定的邀請句。2～3 句一段，段落之間空一行",',
+    '  "ig": ["5 張圖卡，每張一句話，25 字內。第 1 張是' + w + '的問題，第 2～4 張是我的看法和做法，第 5 張是邀請"],',
+    '  "email": {"subject": "主旨，20 字內的問句，講' + w + '會遇到的那個時刻", "preview": "預覽文字，20 字內的一句，接著主旨往下講", "body": "銷售信內文，200～350 字，一段 1～3 句，段落之間空一行。照這個順序寫：第一行「嗨，」→ ' + w + '問的那句話（用引號，單獨一行）→ 一句同理他 → 我怎麼看這件事 → 我的做法，最多 3 點，一點一行，前面加「・」→「這週可以試一件小事：」加一件十分鐘做得完的事（要從我的做法來）→ 最後一句邀請他來聊，用冒號結尾，下面會接按鈕", "cta": "按鈕上的字，10 字內", "ps": "P.S. 開頭的一句，請他回信"},',
+    '  "ads": [{"primary": "主要文字，80～150 字，一段 1～2 句，段落之間空一行。第一行 25 字內，單獨看也看得懂。最後一句是固定的邀請句", "image": "圖上的字，14 字內，用逗號或問號分成兩段，每段 7 個字以內", "headline": "標題，14 字內", "desc": "說明，12 字內，寫這是什麼服務", "cta": "從「傳送訊息」「了解更多」「立即預約」選一個"}]',
+    '}',
+    '規則：',
+    '- ads 要 3 則，放在 Facebook、Instagram 的動態消息，口氣像一般貼文。三則的第一行要明顯不同：第 1 則第一行是' + w + '問的那句話（用引號），第 2 則第一行是我會怎麼做，第 3 則第一行是我怎麼看這件事。一則只講一件事、只放一個邀請。',
+    '- 廣告不能直接說、也不能暗示看的人的狀況（收入、負債、健康、年齡），不要寫「你是不是…」「你也…嗎」；改寫成「很多人問我…」，或直接講我的做法。',
+    '- 不寫' + w + '的名字、公司或學校、認得出人的細節；不寫成某一位' + w + '的故事（可以寫「很多人會問我」）。',
+    '- 現有' + w + '（已經在跟我合作的人）問的題目，可以寫「我的學員常問我」，但不寫是哪一位，也不寫他的成果和數字。',
+    '- 不寫價格、期限、名額，不保證效果。不加 hashtag、不加 emoji。',
+    '- 不要用：破折號、「不是 A，而是 B」、「你是否也」、「讓我們一起」、「首先、其次、最後」、結尾問「你覺得呢？」。',
+    '- 繁體中文、台灣用語、全形標點。'
+  ].join('\n');
+}
+
+async function genMaterial(brainId) {
+  if (!S.sample || S.ctl.mat || isEx()) return;
+  const b = S.brain.find(x => x.id === brainId); if (!b) return;
+  S.err.mat = '';
+  const concerns = S.clients.filter(c => arr(b.sessions).some(s => s.cid === c.id)).flatMap(c => [c.care, c.forces && c.forces.anxiety]).filter(x => x && x !== '這場沒聊到').slice(0, 10);
+  const old = S.ideas.filter(i => i.brainId === b.id).map(i => i.id);
+  const ctl = new AbortController(); S.ctl.mat = ctl; render(true);
+  try {
+    const out = await S.sample.json(matPrompt(settings(), b, concerns, S.clients.length), { signal: ctl.signal, cache: false });
+    if (!out || typeof out !== 'object' || !out.threads) throw { code: 'invalid_json' };
+    const em = out.email && typeof out.email === 'object' ? out.email : {};
+    await put('ideas', newId(), {
+      brainId: b.id, source: b.q, title: str(out.title, 80), threads: str(out.threads, 1400), ig: arr(out.ig).slice(0, 6).map(x => str(x, 60)).filter(Boolean),
+      email: { subject: str(em.subject, 60), preview: str(em.preview, 60), body: str(em.body, 1600), cta: str(em.cta, 24), ps: str(em.ps, 160) },
+      ads: arr(out.ads).slice(0, 3).map((a, i) => ({ angle: AD_ANGLES[i], primary: str(a && a.primary, 600), image: str(a && a.image, 40), headline: str(a && a.headline, 40), desc: str(a && a.desc, 40), cta: AD_CTAS.includes(a && a.cta) ? a.cta : AD_CTAS[0] })).filter(a => a.primary),
+      createdAt: Date.now()
+    });
+    for (const id of old) { try { await remove('ideas', id); } catch (e2) { /* 舊的沒刪到也沒關係，畫面只會拿最新的那一份 */ } }
+    S.matTab = 'threads'; S.adTab = 0;
+    toast('素材做好了');
+  } catch (e) {
+    if (!(e && e.code === 'cancelled')) S.err.mat = errCopy(e);
+  } finally { S.ctl.mat = null; render(true); }
+}
+
+function seqPrompt(st, qs, gap) {
+  const w = st.clientWord || '客人', k = qs.length;
+  return [
+    '你幫一位高單價顧問，把' + w + '最常問的幾個問題，寫成一組銷售序列信。收信的人留了 Email、還沒買。' + (gap === 7 ? '每週寄一封。' : '每 ' + gap + ' 天寄一封。'),
+    '全部只能用下面「我的回答」和「我為什麼這樣回答」裡有的內容。可以把口語順成文字、刪掉重複，不能加我沒講過的方法、數字、故事、研究。',
+    '我的身分（數字只能用這裡寫的）：' + (st.who || '（沒填，所以不要放年資、人數這類數字）'),
+    '我賣的方案：' + (st.sells || '（沒填）'),
+    '',
+    '一共 ' + (k + 2) + ' 封，照這個順序：',
+    '- 第 1 到 ' + k + ' 封：一封回答一題，照下面題目的順序。每封：「嗨，」→ ' + w + '問的那句話（用引號，單獨一行）→ 一句同理他 → 我怎麼看、我怎麼做（做法最多 3 點，一點一行，前面加「・」）→「這週可以試一件小事：」加一件十分鐘做得完的事。第 1 封開頭先謝謝他留下 Email，說接下來會寄幾封、每封回答一個常被問的問題。這幾封 cta 寫空字串。',
+    '- 第 ' + (k + 1) + ' 封：介紹方案。怎麼進行、適合誰，回到前面幾封講過的擔心。最後一句邀請他來聊，用冒號結尾，下面會接按鈕。',
+    '- 第 ' + (k + 2) + ' 封：收尾。問他這幾封裡，有沒有哪一封讓他想到自己，請他回信；再給一次按鈕。',
+    '- 每一封的 ps 預告下一封要講什麼；最後一封的 ps 說之後還是會收到平常的信。',
+    '',
+    '只回一個 JSON 物件：{"emails": [{"subject": "主旨，20 字內", "preview": "預覽文字，20 字內，接著主旨往下講", "body": "內文 150～300 字，一段 1～3 句，段落之間空一行", "cta": "按鈕上的字，10 字內，沒有就寫空字串", "ps": "P.S. 開頭的一句"}]}',
+    '規則：',
+    '- 不寫' + w + '的名字、公司或學校、認得出人的細節；不寫成某一位' + w + '的故事（可以寫「很多人會問我」「我的學員常問我」）。',
+    '- 不寫價格、期限、名額，不保證效果。不加 hashtag、不加 emoji。',
+    '- 不要用：破折號、「不是 A，而是 B」、「你是否也」、「讓我們一起」、「首先、其次、最後」、結尾問「你覺得呢？」。',
+    '- 繁體中文、台灣用語、全形標點。',
+    '',
+    '題目：',
+    qs.map((b, i) => (i + 1) + '. ' + b.q + '\n   我的回答：' + (b.answer || '') + '\n   我為什麼這樣回答：' + (b.why || '（還沒寫）')).join('\n')
+  ].join('\n');
+}
+
+async function genSequence() {
+  if (!S.sample || S.ctl.seq || isEx()) return;
+  const { list, def } = seqList(), sel = S.seqSel || def, gap = S.seqGap;
+  const qs = list.filter(x => sel.has(x.b.id)).map(x => x.b);
+  S.err.seq = '';
+  if (qs.length < 2 || qs.length > 6) { S.err.seq = '請選 2 到 6 題。'; render(true); return; }
+  const ctl = new AbortController(); S.ctl.seq = ctl; render(true);
+  try {
+    const out = await S.sample.json(seqPrompt(settings(), qs, gap), { signal: ctl.signal, cache: false });
+    const ems = arr(out && out.emails).filter(e => e && e.body).slice(0, qs.length + 2);
+    if (!ems.length) throw { code: 'invalid_json' };
+    await saveWs({ sequence: { at: Date.now(), gap, qids: qs.map(b => b.id), emails: ems.map((e, i) => ({
+      role: i < qs.length ? '回答：' + qs[i].q : (i === ems.length - 1 ? '收尾' : '介紹方案'),
+      subject: str(e.subject, 60), preview: str(e.preview, 60), body: str(e.body, 1600), cta: str(e.cta, 24), ps: str(e.ps, 160) })) } });
+    S.seqSel = null; S.openD = {};
+    toast('序列信做好了');
+  } catch (e) {
+    if (!(e && e.code === 'cancelled')) S.err.seq = errCopy(e);
+  } finally { S.ctl.seq = null; render(true); }
+}
+
+/* 給分析用的數字：從哪裡來、服務、停在哪一步、被問最多的題目（程式先算好，分身只負責從數字推建議） */
+function newStats(cs, qs) {
+  const by = (keys, f) => keys.map(k => { const l = cs.filter(c => f(c) === k); return l.length ? k + ' ' + l.length + ' 位（成交 ' + wonOf(l) + '）' : ''; }).filter(Boolean).join('、') || '（沒有資料）';
+  const lost = cs.filter(c => c.result === '沒成交');
+  return ['・從哪裡知道你：' + by(SOURCES, c => c.src),
+    '・介紹的服務：' + by([...new Set(cs.map(c => c.offer).filter(Boolean))], c => c.offer),
+    '・沒成交的人停在哪一步：' + (REACH.map(k => { const x = lost.filter(c => c.reach === k).length; return x ? k + ' ' + x + ' 位' : ''; }).filter(Boolean).join('、') || '（沒有資料）'),
+    '・被問最多的題目：' + (qs.slice(0, 3).map(b => b.q).join('、') || '（沒有）')].join('\n');
+}
+
+/* 分析：一次問出「成交（續約）的原因、還沒成交（沒續約）的原因」和「我的方法」。看的是上面選的那一種（新客或現有客戶）。
+   每個原因要附是哪幾場（新客寫場次編號，現有客戶寫代號 P1、P2），圖上的位數是程式自己數的 */
+async function analyzeAll() {
+  if (!S.sample || S.ctl.an || isEx()) return;
+  S.err.an = '';
+  const kind = S.kind, cur = kind === 'current';
+  const cs = ofKind(S.clients, kind).sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-60);
+  if (cs.length < 2) { S.err.an = '整理 2 場以上的' + (cur ? '現有客戶' : '新客') + '諮詢，才看得出一再出現的做法。'; render(true); return; }
+  const qs = [...S.brain].sort(byCount).slice(0, 25);
+  const w = cw();
+  const ps = people(cs), codeOf = new Map(ps.map((p0, i) => [p0.c.name || p0.c.id, 'P' + (i + 1)]));
+  const latest = c => (ps.find(p0 => (p0.c.name || p0.c.id) === (c.name || c.id)) || {}).c;
+  const curLine = (c, i) => '#' + (i + 1) + ' 代號：' + codeOf.get(c.name || c.id) + '｜續約：' + RW.current[resKey(latest(c))] + '｜這次聊什麼：' + (c.stage || '') + '｜他問的：' + (c.care || '') + '｜我怎麼回的：' + (c.how || '') + '｜說好的下一步：' + (c.next || '') + '｜後來的回應：' + (c.feedback || '（沒填）');
+  const qsText = qs.length ? qs.map(b => { const x = whoAsked(b); return '・' + b.q + '（新客 ' + x.nNew + ' 位問過，其中成交 ' + x.gNew['成交'].length + ' 位；現有' + w + ' ' + x.nCur + ' 位問過）：' + b.answer; }).join('\n') : '（還沒有）';
+  const body = cur ? [
+    '你是高單價顧問的教練。下面是一位顧問跟已經付費、正在合作中的' + w + '每一次諮詢的紀錄（名字拿掉了，同一位' + w + '用同一個代號），和他最常用的回答。幫他看兩件事。只用紀錄上寫的，不要猜。',
+    '第一件：只看已經到期的' + w + '（續約那一欄是「續約了」「沒續約」「還在考慮」的），分成續約了、還沒續約兩組，比較他們問的事、顧問怎麼回、說好的下一步。兩組的原因都先分大類（大類只能用下面列的），每個大類寫一句這一類最常出現的事，並列出是哪幾位（寫代號）。「還沒到期」的不要放進這兩組。',
+    '第二件：他帶' + w + '的方法。哪些做法一再出現而且有用、哪一步常漏掉。',
+    '只回一個 JSON 物件：',
+    '{"won_reasons": [{"cat": "續約的大類，從清單選一個", "reason": "這一類最常出現的事，6 到 12 個字", "refs": ["P1", "P3"]}], "lost_reasons": [{"cat": "還沒續約的大類，從清單選一個", "reason": "這一類最常出現的事，6 到 12 個字", "refs": ["P2"]}], "try_next": "下一次跟' + w + '聊可以試的一件事，40 個字以內，具體到怎麼開口",',
+    ' "strong": [{"point": "他做得好、而且重複出現的做法，一句白話", "refs": [1, 2]}], "gaps": [{"point": "常漏掉的一步，一句白話，寫出下次怎麼做", "refs": [4]}], "phrases": ["他最有力的說法，照抄他的原話，40 字內"],',
+    ' "caution": "資料夠不夠下結論，一句話"}',
+    '續約的大類只能用：' + CUR_WON_CATS.join('、') + '（看到成果＝數字或結果有變好；信任我＝覺得顧問懂他、夠專業；喜歡我的帶法＝喜歡每次聊的方式和節奏；還有下一個目標＝做到了，還想往下走）。還沒續約的大類只能用：' + CUR_LOST_CATS.join('、') + '。',
+    'won_reasons、lost_reasons 各最多 5 個大類，同一個大類只能出現一次，refs 寫代號，看不出原因的人不要硬放；strong、gaps 各最多 3 點，refs 寫哪幾次的編號；phrases 最多 3 句，從「常用的回答」裡挑。語氣像同事提醒，不要責備。' + STYLE,
+    '',
+    '每一次：',
+    cs.map(curLine).join('\n')
+  ] : [
+    '你是高單價顧問的教練。下面是一位顧問每一場新客諮詢的紀錄（已經拿掉名字），和他最常用的回答。幫他看兩件事。只用紀錄上寫的，不要猜。',
+    '第一件：把成交和還沒成交（含還在考慮）分成兩組，比較' + w + '最在意的事、分類、顧問怎麼回、' + w + '後來的回應。兩組的原因都先分大類（大類只能用下面列的），每個大類寫一句這一類最常出現的事，並列出是哪幾場。',
+    '第二件：他的諮詢方法。哪些做法一再出現而且有用、哪一步常漏掉。',
+    '只回一個 JSON 物件：',
+    '{"won_reasons": [{"cat": "成交的大類，從清單選一個", "reason": "這一類最常出現的事，6 到 12 個字，寫顧問做了什麼", "refs": [1, 3]}], "lost_reasons": [{"cat": "還沒成交的大類，從清單選一個", "reason": "這一類最常出現的事，6 到 12 個字", "refs": [2]}], "try_next": "下一場可以試的一件事，40 個字以內，具體到怎麼開口", "fixes": [{"cat": "分類，照抄", "fix": "這一類客人怎麼解，一句話"}], "advice": {"bookings": "想讓更多人來約，先做的一件事，30 個字以內，從「從哪裡知道你」的數字推", "page": "銷售頁可以改的一處，30 個字以內，從被問最多的題目和沒成交的原因推", "process": "銷售流程可以改的一步，30 個字以內，從「停在哪一步」的數字推"},',
+    ' "strong": [{"point": "他做得好、而且重複出現的做法，一句白話", "refs": [1, 2]}], "gaps": [{"point": "常漏掉的一步，一句白話，寫出下次怎麼做", "refs": [4]}], "phrases": ["他最有力的說法，照抄他的原話，40 字內"],',
+    ' "caution": "資料夠不夠下結論，一句話"}',
+    '成交的大類只能用：' + WON_CATS.join('、') + '（信任我＝覺得顧問懂他、夠專業；喜歡我的風格＝喜歡顧問講話或帶人的方式；方案剛好符合＝內容剛好是他缺的；價格可以接受＝覺得值得，或付款方式可以；現在就想解決＝有期限、不想再拖）。還沒成交的大類只能用：' + LOST_CATS.join('、') + '。',
+    'won_reasons、lost_reasons 各最多 5 個大類，同一個大類只能出現一次；strong、gaps 各最多 3 點。refs 寫這點用到哪幾場的編號。won_reasons 的 refs 只能放成交的場次，lost_reasons 的 refs 只能放還沒成交的場次，紀錄上看得出來的每一場都要列進去，一場可以放進兩個大類，看不出原因的場次不要硬放；出現越多場的排越前面。成交的那一組沒有人，won_reasons 就回空陣列；還沒成交的那一組沒有人，lost_reasons 就回空陣列。phrases 最多 3 句，從「常用的回答」裡挑成交的人問過的。語氣像同事提醒，不要責備。' + STYLE,
+    '',
+    'fixes：紀錄裡出現的每一類（照「分類」那一欄）各寫一句，25 個字以內。從那一類成交的幾次，學你做了什麼；那一類還沒有人成交，就寫下次可以怎麼做。用你在紀錄裡說過的話，不要寫術語。',
+    '',
+    '程式算好的數字：',
+    newStats(cs, qs),
+    '',
+    '每一場：',
+    cs.map((c, i) => clientLine(c, i)).join('\n')
+  ];
+  const prompt = body.concat(['', '常用的回答：', qsText]).join('\n');
+  const ctl = new AbortController(); S.ctl.an = ctl; render(true);
+  try {
+    const out = await S.sample.json(prompt, { signal: ctl.signal });
+    if (!out || typeof out !== 'object' || Array.isArray(out)) throw { code: 'invalid_json' };
+    const mapRefs = x => ({ point: str(x && x.point, 240), refs: arr(x && x.refs).map(r => cs[(parseInt(r, 10) || 0) - 1]).filter(Boolean).map(c => c.id) });
+    const pts = k => arr(out[k]).slice(0, 3).map(mapRefs).filter(x => x.point);
+    const caution = str(out.caution, 160), at = Date.now();
+    const method = { strong: pts('strong'), gaps: pts('gaps'), phrases: arr(out.phrases).slice(0, 3).map(p0 => str(p0, 80)).filter(Boolean), caution, at, n: cs.length };
+    /* 新客：refs 是場次編號；現有客戶：refs 是代號，對到那位最近一次的紀錄 */
+    const byCode = new Map(ps.map(p0 => [codeOf.get(p0.c.name || p0.c.id), p0.c]));
+    const pool = cur ? ps.map(p0 => p0.c) : cs;
+    const toIds = x => [...new Set(arr(x && x.refs).map(r => cur ? byCode.get(String(r).trim().toUpperCase()) : cs[(parseInt(r, 10) || 0) - 1]).filter(Boolean).map(c => c.id))];
+    const resOf = id => { const c = pool.find(x => x.id === id); return c ? resKey(c) : '-'; };
+    const rs = (k, keep, cats) => { const seen = new Set(); return arr(out[k]).slice(0, 8).map(x => ({ cat: cats.includes(x && x.cat) ? x.cat : '其他', reason: str(x && x.reason, 30), refs: toIds(x).filter(id => keep(resOf(id))) })).filter(x => x.refs.length && !seen.has(x.cat) && seen.add(x.cat)).sort((a, b) => b.refs.length - a.refs.length).slice(0, 6); };
+    const insight = {
+      won_reasons: rs('won_reasons', r => r === '成交', cur ? CUR_WON_CATS : WON_CATS),
+      lost_reasons: rs('lost_reasons', r => cur ? (r === '考慮中' || r === '沒成交') : (r !== '成交' && r !== '-'), cur ? CUR_LOST_CATS : LOST_CATS),
+      try_next: str(out.try_next, 300), caution, at, n: cs.length
+    };
+    if (!cur) { const a = out.advice && typeof out.advice === 'object' ? out.advice : {}; insight.advice = { bookings: str(a.bookings, 80), page: str(a.page, 80), process: str(a.process, 80) }; insight.fixes = Object.fromEntries(arr(out.fixes).filter(x => x && CONCERNS.includes(x.cat) && x.fix).map(x => [x.cat, str(x.fix, 60)])); }
+    await saveWs(cur ? { insight_current: insight, method_current: method } : { insight, method });
+  } catch (e) {
+    if (!(e && e.code === 'cancelled')) S.err.an = errCopy(e);
+  } finally { S.ctl.an = null; render(true); }
+}
+
+/* ---------- 互動 ---------- */
+function toast(t) {
+  const el = $('#toast'); el.textContent = t; el.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { el.hidden = true; }, 2400);
+}
+function updateCount() { $('#n-count').textContent = '目前 ' + fmt($('#n-text').value.length) + ' 字'; }
+function cleanTranscript(text, name) {
+  if (/\.(srt|vtt)$/i.test(name || '') || /-->/.test(text)) {
+    return text.split(/\r?\n/).filter(l => { const t = l.trim(); return t && !/^\d+$/.test(t) && !/-->/.test(t) && !/^WEBVTT/i.test(t); }).join('\n');
+  }
+  return text;
+}
+
+/* 圖表的滑鼠提示：指到哪一段，顯示是哪幾位客人。手機沒有滑鼠，人數寫在長條下面。 */
+const tipEl = $('#tip');
+document.addEventListener('pointermove', e => {
+  const s = e.pointerType === 'mouse' && e.target.closest ? e.target.closest('[data-tip]') : null;
+  if (!s) { tipEl.hidden = true; return; }
+  tipEl.textContent = s.dataset.tip; tipEl.hidden = false;
+  tipEl.style.left = Math.max(8, Math.min(e.clientX + 14, window.innerWidth - 276)) + 'px';
+  tipEl.style.top = (e.clientY + 18) + 'px';
+});
+document.addEventListener('scroll', () => { tipEl.hidden = true; }, true);
+
+$('#add-form').addEventListener('submit', e => { e.preventDefault(); runPrep(); });
+$('#a-sample').addEventListener('click', () => { $('#a-name').value = 'Ken（範例）'; $('#a-form').value = EX_FORM; });
+$('#new-form').addEventListener('submit', e => { e.preventDefault(); runSession(); });
+$('#n-text').addEventListener('input', updateCount);
+$('#n-sample').addEventListener('click', () => { const c = S.newKind === 'current'; $('#n-text').value = c ? EX_TRANSCRIPT_CUR : EX_TRANSCRIPT; $('#n-name').value = c ? '小芸（範例）' : '阿哲（範例）'; updateCount(); });
+$('#n-file').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  if (/\.docx?$/i.test(file.name)) { $('#n-msg').textContent = 'Word 檔請打開之後，全選、複製，再貼到上面的框框裡。'; return; }
+  const rd = new FileReader();
+  rd.onload = () => { $('#n-text').value = cleanTranscript(String(rd.result || ''), file.name); updateCount(); $('#n-msg').textContent = ''; };
+  rd.onerror = () => { $('#n-msg').textContent = '這個檔案讀不出來，請改用複製貼上。'; };
+  rd.readAsText(file);
+});
+
+/* 序列信：勾題目、選多久寄一封 */
+document.addEventListener('change', e => {
+  const t = e.target; if (!t.matches) return;
+  if (t.matches('input[data-seqq]')) { const sel = new Set(S.seqSel || seqList().def); if (t.checked) sel.add(t.dataset.seqq); else sel.delete(t.dataset.seqq); S.seqSel = sel; render(true); }
+  else if (t.matches('select[data-seqgap]')) { S.seqGap = parseInt(t.value, 10) || 2; render(true); }
+});
+
+/* 改分類 */
+document.addEventListener('change', async e => {
+  const s = e.target; if (!s.matches || !s.matches('select[data-type-of]')) return;
+  const id = s.dataset.typeOf;
+  try {
+    await patch('clients', id, { type: s.value });
+    if (S.lastRun && S.lastRun.client.id === id) S.lastRun.client.type = s.value;
+    toast('改好了');
+  } catch (err) { toast(dbErr(err)); }
+  s.blur();
+  if (S.view.name === 'new') renderNew(); else render(true);
+});
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  const d = b.dataset;
+  if (d.back) { goBack(d.back); return; }
+  if (d.go) { if (d.go === 'new') S.fromUp = null; go(d.go, d.id); return; }
+  if (d.mtab) { S.matTab = d.mtab; render(true); return; }
+  if (d.adv) { S.adTab = parseInt(d.adv, 10) || 0; render(true); return; }
+  if (d.demo) { saveDemoPref(d.demo === 'on'); S.hist = []; render(true); window.scrollTo(0, 0); return; }
+  if (d.kind) { S.kind = d.kind; render(true); return; }
+  if (d.mkind) { S.matKind = d.mkind; render(true); return; }
+  if (d.nkind) { S.newKind = d.nkind; renderNew(); return; }
+  if (d.act === 'an') { analyzeAll(); return; }
+  if (d.act === 'mat') { genMaterial(d.id); return; }
+  if (d.act === 'seq') { genSequence(); return; }
+  if (d.act === 'fix') {
+    const t = document.getElementById('fix-text'); if (!t || isEx()) return;
+    const fx = Object.assign({}, (S.ws && S.ws.fixes) || {}); fx[d.cat] = t.value.trim();
+    try { await saveWs({ fixes: fx }); toast('存好了'); } catch (err) { toast(dbErr(err)); }
+    render(true); return;
+  }
+  if (d.act === 'done-up') {
+    const u = V().upcoming.find(x => x.id === d.id); if (!u) return;
+    const demo = isEx();
+    S.fromUp = demo ? null : u.id; S.newStage = 'form'; S.newKind = u.kind === 'current' ? 'current' : 'new';
+    $('#n-name').value = (u.name || '') + (demo ? '（範例）' : '');
+    $('#n-date').value = demo || dayDiff(u.when) > 0 ? today() : ((u.when || '').slice(0, 10) || today());
+    go('new'); return;
+  }
+  if (d.stop) { const c = S.ctl[d.stop]; if (c) c.abort(); return; }
+  if (d.copy) {
+    const src = document.getElementById(d.copy); if (!src) return;
+    try { await navigator.clipboard.writeText(src.textContent); toast('複製好了，可以去貼上'); }
+    catch (err) { const r = document.createRange(); r.selectNodeContents(src); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('已經選起來了，按 Ctrl+C 複製'); }
+    return;
+  }
+  if (d.result) {
+    if (isEx() && S.view.name !== 'new') return;
+    const rv = d.result === 'none' ? '' : d.result;
+    try { await patch('clients', d.id, { result: rv }); if (S.lastRun && S.lastRun.client.id === d.id) S.lastRun.client.result = rv; toast('改好了'); }
+    catch (err) { toast(dbErr(err)); }
+    if (S.view.name === 'new') renderNew(); else render(true);
+    return;
+  }
+  if (d.save) {
+    const src = document.getElementById(d.from); if (!src) return;
+    try { await patch(d.save, d.id, { [d.field]: src.value }); toast('存好了'); } catch (err) { toast(dbErr(err)); }
+    render(true); return;
+  }
+  if (d.del) {
+    if (!d.armed) {
+      d.armed = '1'; b.textContent = '確定要刪除嗎？再按一次';
+      setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = b.dataset.label; } }, 5000);
+      return;
+    }
+    try {
+      await remove(d.del, d.id);
+      if (d.del === 'clients') for (const q of S.brain.filter(x => arr(x.sessions).some(s => s.cid === d.id))) await patch('brain', q.id, { sessions: arr(q.sessions).filter(s => s.cid !== d.id) });
+      if (d.del === 'brain') for (const i of S.ideas.filter(x => x.brainId === d.id)) { try { await remove('ideas', i.id); } catch (e2) { /* 留著也不會顯示 */ } }
+      toast('刪掉了');
+      S.hist = [];
+      go({ clients: 'clients', brain: 'materials', upcoming: 'home' }[d.del] || 'home', null, true);
+    } catch (err) { toast(dbErr(err)); }
+  }
+});
+
+init();
+})();
+</script>
+</body></html>
